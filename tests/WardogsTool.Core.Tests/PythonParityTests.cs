@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Numerics;
 using System.Text.Json;
 using WardogsTool.Core.AntiAfk;
 using WardogsTool.Core.Mortar;
@@ -34,6 +35,7 @@ public class PythonParityTests
     {
         var failures = new List<string>();
         var count = 0;
+        var rangeTooLarge = 0;
         foreach (var c in Reference.GetProperty("mortar").EnumerateArray())
         {
             count++;
@@ -41,6 +43,14 @@ public class PythonParityTests
             var t = c.GetProperty("target");
             var mortar = new MapPoint(m[0].GetDouble(), m[1].GetDouble());
             var target = new MapPoint(t[0].GetDouble(), t[1].GetDouble());
+            if (BigInteger.Parse(c.GetProperty("range").GetRawText()) > long.MaxValue)
+            {
+                // Intended difference: Python prints the big integer; the port reports it.
+                rangeTooLarge++;
+                if (MortarCalculator.TrySolve(mortar, target, out _, out var e) || e != MortarCalculator.RangeTooLargeMessage)
+                    failures.Add($"{mortar} -> {target}: expected the range-too-large message, got \"{e}\"");
+                continue;
+            }
             if (!MortarCalculator.TrySolve(mortar, target, out var s, out var error))
             {
                 failures.Add($"{mortar} -> {target}: {error}");
@@ -61,6 +71,7 @@ public class PythonParityTests
             Check(failures, c, "historyText", MortarText.HistoryEntry(target, s));
         }
         Assert.True(count > 4000, $"fixture has only {count} cases");
+        Assert.Equal(1, rangeTooLarge);
         Assert.True(failures.Count == 0, $"{failures.Count} mismatches:\n" + string.Join("\n", failures.Take(20)));
     }
 
@@ -107,26 +118,39 @@ public class PythonParityTests
         var keyboard = new FakeKeyboard(null, keys);
 
         var failures = new List<string>();
-        var divergences = 0;
+        var divergences = new List<string>();
         foreach (var c in Reference.GetProperty("antiAfk").EnumerateArray())
         {
             string F(string name) => c.GetProperty(name).GetString()!;
+            BigInteger I(string name) => BigInteger.Parse(c.GetProperty(name).GetRawText());
             var ok = AntiAfkSettings.TryValidate(F("key"), F("count"), F("gap"), F("period"), keyboard, out var plan, out var error);
             var label = $"({Show(F("key"))}, {Show(F("count"))}, {Show(F("gap"))}, {Show(F("period"))})";
 
+            // Intended differences: inputs Python's read_afk_settings accepts but its scheduler
+            // then cannot handle (crash, or millions of after() calls). The port rejects them.
+            string? expectedRejection = null;
             if (c.TryGetProperty("pythonSchedulerError", out _))
+                expectedRejection = PythonNumber.TryParseFloat(F("period"), out var p, out _) && double.IsFinite(p)
+                    ? AntiAfkSettings.PeriodTooLargeMessage
+                    : AntiAfkSettings.NonFinitePeriodMessage;
+            else if (c.GetProperty("ok").GetBoolean() && I("periodMs") > AntiAfkSettings.MaxPeriodMs)
+                expectedRejection = AntiAfkSettings.PeriodTooLargeMessage;
+            else if (c.GetProperty("ok").GetBoolean() && I("countValue") > int.MaxValue)
+                expectedRejection = AntiAfkSettings.CountTooLargeMessage;
+
+            if (expectedRejection is not null)
             {
-                // Python accepts inf/nan here and then crashes in schedule_cycle. The port
-                // rejects them up front — the one intended difference.
-                divergences++;
-                if (ok || error != AntiAfkSettings.NonFinitePeriodMessage)
-                    failures.Add($"{label}: expected the non-finite rejection, got ok={ok} \"{error}\"");
+                divergences.Add(F("period"));
+                if (ok || error != expectedRejection)
+                    failures.Add($"{label}: expected \"{expectedRejection}\", got ok={ok} \"{error}\"");
                 continue;
             }
             if (c.GetProperty("ok").GetBoolean())
             {
-                if (!ok || plan!.VirtualKey != c.GetProperty("vk").GetInt32() || plan.Count != c.GetProperty("countValue").GetInt32()
-                    || plan.GapMs != c.GetProperty("gapValue").GetInt64() || plan.PeriodMs != c.GetProperty("periodMs").GetInt64())
+                var gap = I("gapValue");
+                var expectedGap = gap <= long.MaxValue ? (long)gap : 0; // unused when count == 1
+                if (!ok || plan!.VirtualKey != c.GetProperty("vk").GetInt32() || plan.Count != (int)I("countValue")
+                    || plan.GapMs != expectedGap || plan.PeriodMs != (long)I("periodMs"))
                     failures.Add($"{label}: got ok={ok} {plan} \"{error}\"");
             }
             else if (ok || error != F("error"))
@@ -134,7 +158,8 @@ public class PythonParityTests
                 failures.Add($"{label}: got ok={ok} \"{error}\", python \"{F("error")}\"");
             }
         }
-        Assert.Equal(2, divergences);
+        // inf, nan, 1e308 (period overflows), 1e12 (beyond the scheduler), a count of 1e20.
+        Assert.Equal(5, divergences.Count);
         Assert.True(failures.Count == 0, string.Join("\n", failures));
     }
 

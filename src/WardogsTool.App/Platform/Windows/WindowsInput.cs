@@ -22,21 +22,23 @@ internal sealed class WindowsKeyboardInput : IKeyboardInput
         return res != -1;
     }
 
-    // Python tap: scan = MapVirtualKeyW(vk, 0); keybd_event(vk, scan, 0, 0)
-    public void KeyDown(byte virtualKey) =>
-        NativeMethods.keybd_event(virtualKey, ScanCode(virtualKey), 0, 0);
+    // Python tap: scan = MapVirtualKeyW(vk, 0)  (ctypes passes it to keybd_event's BYTE parameter)
+    public byte GetScanCode(byte virtualKey) =>
+        (byte)NativeMethods.MapVirtualKeyW(virtualKey, NativeMethods.MAPVK_VK_TO_VSC);
+
+    // Python: keybd_event(vk, scan, 0, 0)
+    public void KeyDown(byte virtualKey, byte scanCode) =>
+        NativeMethods.keybd_event(virtualKey, scanCode, 0, 0);
 
     // Python: keybd_event(vk, scan, KEYEVENTF_KEYUP, 0)
-    public void KeyUp(byte virtualKey) =>
-        NativeMethods.keybd_event(virtualKey, ScanCode(virtualKey), NativeMethods.KEYEVENTF_KEYUP, 0);
-
-    private static byte ScanCode(byte virtualKey) =>
-        (byte)NativeMethods.MapVirtualKeyW(virtualKey, NativeMethods.MAPVK_VK_TO_VSC);
+    public void KeyUp(byte virtualKey, byte scanCode) =>
+        NativeMethods.keybd_event(virtualKey, scanCode, NativeMethods.KEYEVENTF_KEYUP, 0);
 }
 
 /// <summary>
 /// Raises the system timer resolution to 1 ms for the app's lifetime, as wardogs_tool.py does
-/// (winmm.timeBeginPeriod(1)). Without it the 40 ms hammer gap stretches to ~46 ms.
+/// (winmm.timeBeginPeriod(1)). The hammer and anti-AFK waits do not depend on it
+/// (<see cref="HighResolutionTimeSource"/>); it is kept for parity with the Python process.
 /// </summary>
 internal sealed class TimerResolution : IDisposable
 {

@@ -74,7 +74,14 @@ public class ParserTests
     public void Python_int_accepts(string text, long expected)
     {
         Assert.True(PythonNumber.TryParseInt(text, out var v, out _));
-        Assert.Equal(expected, v);
+        Assert.Equal(new System.Numerics.BigInteger(expected), v);
+    }
+
+    [Fact]
+    public void Python_int_is_unbounded()
+    {
+        Assert.True(PythonNumber.TryParseInt("99999999999999999999999", out var v, out _));
+        Assert.Equal(System.Numerics.BigInteger.Parse("99999999999999999999999"), v);
     }
 
     [Theory]
@@ -82,9 +89,38 @@ public class ParserTests
     [InlineData("")]
     [InlineData("1e3")]
     [InlineData("_1")]
-    [InlineData("99999999999999999999999")]
     public void Python_int_rejects(string text)
     {
         Assert.False(PythonNumber.TryParseInt(text, out _, out _));
+    }
+
+    [Theory]
+    [InlineData("abc", "'abc'")]
+    [InlineData("1\\2", "'1\\\\2'")]
+    [InlineData("it's", "\"it's\"")]
+    [InlineData("'\"x", "'\\'\"x'")]
+    [InlineData("a\tb", "'a\\tb'")]
+    [InlineData("104.39\u200b", "'104.39\\u200b'")]
+    [InlineData("1\u007f", "'1\\x7f'")]
+    [InlineData("１０４．３９", "'１０４．３９'")]
+    [InlineData("a\u00a0b", "'a\\xa0b'")]
+    public void Python_repr(string text, string expected)
+    {
+        Assert.Equal(expected, PythonNumber.PythonRepr(text));
+    }
+
+    [Fact]
+    public void Astral_unicode_digits_parse_like_python()
+    {
+        Assert.True(CoordinateParser.TryParse("\U0001D7CF\U0001D7CE 5", out var p, out _));
+        Assert.Equal(10, p.X);
+        Assert.Equal(5, p.Y);
+    }
+
+    [Fact]
+    public void Int_error_repr_is_cut_at_200_characters_like_python()
+    {
+        Assert.False(PythonNumber.TryParseInt(new string('x', 250), out _, out var error));
+        Assert.Equal("invalid literal for int() with base 10: '" + new string('x', 199), error);
     }
 }

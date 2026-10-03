@@ -184,12 +184,12 @@ internal static class Scenarios
     }
 
     /// <summary>Hammer at the launched hold; Esc lands 150 ms into a hold.</summary>
-    public static ScenarioResult HammerStopDuringHold(Probe p, string target, int holdMs)
+    public static ScenarioResult HammerStopDuringHold(Probe p, string target, int holdMs, int seconds = 3)
     {
-        var r = new ScenarioResult(target, $"Hammer {holdMs} ms, stop during hold");
+        var r = new ScenarioResult(target, seconds == 3 ? $"Hammer {holdMs} ms, stop during hold" : $"Hammer {holdMs} ms, tool window minimized");
         p.Activate();
         var t0 = p.KeyTap(Probe.VkF9);
-        p.Sleep(2600);
+        p.Sleep(seconds * 1000 - 400);
         var d = p.WaitFor(e => e.FromApp && e.IsLeftDown, Recorder.Now, 2000);
         r.Expect(d is not null, "no mouse-down after F9");
         if (d is null) return r;
@@ -369,10 +369,37 @@ internal static class Scenarios
         return r;
     }
 
+    /// <summary>
+    /// The tool window minimized, as when the game is in front. Windows 11 stops honouring
+    /// timeBeginPeriod for occluded/minimized window-owning processes, so this is where timer
+    /// precision problems show.
+    /// </summary>
+    public static ScenarioResult HammerMinimized(Probe p, ITarget target, int holdMs)
+    {
+        var proc = target.Launch(new TargetSettings(HoldMs: holdMs));
+        try
+        {
+            if (!Probe.WaitForWindow(proc, 15000)) throw new AbortException($"{target.Name} window did not appear");
+            p.Sleep(1200);
+            Native.ShowWindow(proc.MainWindowHandle, 6 /* SW_MINIMIZE */);
+            p.Sleep(1500);
+            var minimized = Native.IsIconic(proc.MainWindowHandle);
+            var r = HammerStopDuringHold(p, target.Name, holdMs, seconds: 6);
+            r.Metric("tool window minimized", minimized);
+            r.Expect(minimized, "could not minimize the tool window");
+            return r;
+        }
+        finally
+        {
+            p.Shutdown(proc);
+        }
+    }
+
     /// <summary>Runs the shared input scenarios against one tool.</summary>
     public static List<ScenarioResult> RunInputSuite(Probe p, ITarget target)
     {
         var results = new List<ScenarioResult>();
+        results.Add(HammerMinimized(p, target, 310));
 
         var proc = target.Launch(new TargetSettings(HoldMs: 310, PeriodSeconds: "3"));
         try

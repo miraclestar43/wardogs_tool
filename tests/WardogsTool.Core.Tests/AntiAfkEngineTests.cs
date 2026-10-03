@@ -26,7 +26,7 @@ public class AntiAfkEngineTests
         var ok = AntiAfkSettings.TryValidate(AntiAfkSettings.DefaultKey, AntiAfkSettings.DefaultCount,
             AntiAfkSettings.DefaultGapMs, AntiAfkSettings.DefaultPeriodSeconds, new FakeKeyboard(null), out var plan, out _);
         Assert.True(ok);
-        Assert.Equal(new AntiAfkPlan(0x43, 2, 500, 180_000), plan);
+        Assert.Equal(new AntiAfkPlan(0x43, 0x2E, 2, 500, 180_000), plan);
         Assert.Equal(50, AntiAfkEngine.KeyHoldMs);
     }
 
@@ -34,7 +34,7 @@ public class AntiAfkEngineTests
     public void First_round_comes_one_full_period_after_start_then_repeats()
     {
         var (engine, time, _, log) = Create(parkAfterMs: 7000);
-        Assert.True(engine.Start(new AntiAfkPlan(0x43, 2, 500, 3000)));
+        Assert.True(engine.Start(new AntiAfkPlan(0x43, 0x2E, 2, 500, 3000)));
         Assert.Equal(TimeSpan.FromMilliseconds(3000), engine.NextRoundAt);
         Assert.True(time.Parked.Wait(WaitTimeout));
 
@@ -56,7 +56,7 @@ public class AntiAfkEngineTests
     public void Presses_overlap_when_the_gap_is_shorter_than_the_50ms_hold()
     {
         var (engine, time, _, log) = Create(parkAfterMs: 1500);
-        engine.Start(new AntiAfkPlan(0x43, 2, 20, 1000));
+        engine.Start(new AntiAfkPlan(0x43, 0x2E, 2, 20, 1000));
         Assert.True(time.Parked.Wait(WaitTimeout));
         engine.Stop();
         Assert.Equal(new[] { "down 43 @1000", "down 43 @1020", "up 43 @1050", "up 43 @1070" }, Keys(log));
@@ -68,7 +68,7 @@ public class AntiAfkEngineTests
         // gap 30 < hold 50: after the first key-down the next event is the second key-down at
         // 1030, which parks — so stop arrives while the first key is still held.
         var (engine, time, _, log) = Create(parkAfterMs: 1010);
-        engine.Start(new AntiAfkPlan(0x43, 2, 30, 1000));
+        engine.Start(new AntiAfkPlan(0x43, 0x2E, 2, 30, 1000));
         Assert.True(time.Parked.Wait(WaitTimeout));
         Assert.Equal(new[] { "down 43 @1000" }, Keys(log));
 
@@ -78,10 +78,46 @@ public class AntiAfkEngineTests
     }
 
     [Fact]
+    public void RequestStop_returns_without_waiting_for_the_owed_key_up()
+    {
+        // Python's stop_afk() returns at once; stop-all relies on that to stop the hammer
+        // without waiting up to 50 ms for an anti-AFK key-up.
+        var log = new List<LogEntry>();
+        var time = new FakeTimeSource(log, TimeSpan.FromMilliseconds(1010));
+        var keyboard = new BlockingKeyUpKeyboard(time);
+        var engine = new AntiAfkEngine(keyboard, time);
+        engine.Start(new AntiAfkPlan(0x43, 0x2E, 2, 30, 1000));
+        Assert.True(time.Parked.Wait(WaitTimeout));
+
+        engine.RequestStop();            // must not block on the key-up the worker still owes
+        Assert.False(engine.IsRunning);
+        Assert.Equal(AntiAfkState.Stopping, engine.State);
+        keyboard.ReleaseKeyUp.Set();
+        Assert.True(engine.Stop());
+        Assert.Equal(AntiAfkState.Stopped, engine.State);
+        Assert.Equal(new[] { "down 43 @1000", "up 43 @1050" }, Keys(log));
+    }
+
+    /// <summary>Holds the worker inside KeyUp until the test releases it.</summary>
+    private sealed class BlockingKeyUpKeyboard(FakeTimeSource time) : Input.IKeyboardInput
+    {
+        private readonly FakeKeyboard _inner = new(time);
+        public ManualResetEventSlim ReleaseKeyUp { get; } = new();
+        public bool TryGetVirtualKey(char c, out byte vk) => _inner.TryGetVirtualKey(c, out vk);
+        public byte GetScanCode(byte vk) => _inner.GetScanCode(vk);
+        public void KeyDown(byte vk, byte scan) => _inner.KeyDown(vk, scan);
+        public void KeyUp(byte vk, byte scan)
+        {
+            ReleaseKeyUp.Wait(WaitTimeout);
+            _inner.KeyUp(vk, scan);
+        }
+    }
+
+    [Fact]
     public void Stop_before_the_first_round_sends_nothing()
     {
         var (engine, time, _, log) = Create(parkAfterMs: 0);
-        engine.Start(new AntiAfkPlan(0x43, 2, 500, 180_000));
+        engine.Start(new AntiAfkPlan(0x43, 0x2E, 2, 500, 180_000));
         Assert.True(time.Parked.Wait(WaitTimeout));
         Assert.True(engine.Stop());
         Assert.Empty(Keys(log));
@@ -91,7 +127,7 @@ public class AntiAfkEngineTests
     public void Start_while_running_is_ignored_and_restart_after_stop_works()
     {
         var (engine, time, _, _) = Create(parkAfterMs: 0);
-        var plan = new AntiAfkPlan(0x43, 2, 500, 3000);
+        var plan = new AntiAfkPlan(0x43, 0x2E, 2, 500, 3000);
         Assert.True(engine.Start(plan));
         Assert.True(time.Parked.Wait(WaitTimeout));
         Assert.False(engine.Start(plan with { Count = 5 }));
@@ -107,7 +143,7 @@ public class AntiAfkEngineTests
     {
         var (engine, _, keyboard, log) = Create(parkAfterMs: 100_000);
         keyboard.ThrowOnDown = 2;
-        engine.Start(new AntiAfkPlan(0x43, 2, 20, 1000));
+        engine.Start(new AntiAfkPlan(0x43, 0x2E, 2, 20, 1000));
         SpinWait.SpinUntil(() => engine.State == AntiAfkState.Stopped, WaitTimeout);
 
         Assert.Equal(new[] { "down 43 @1000", "up 43 @1020" }, Keys(log));
@@ -122,7 +158,7 @@ public class AntiAfkEngineTests
         var hammer = new Hammer.HammerEngine(new FakeMouse(time), new Timing.SystemTimeSource());
         var afk = new AntiAfkEngine(new FakeKeyboard(time), time);
 
-        Assert.True(afk.Start(new AntiAfkPlan(0x43, 1, 0, 1000)));
+        Assert.True(afk.Start(new AntiAfkPlan(0x43, 0x2E, 1, 0, 1000)));
         Assert.True(hammer.Start(310));
         Assert.True(time.Parked.Wait(WaitTimeout));
         Assert.True(hammer.IsRunning);

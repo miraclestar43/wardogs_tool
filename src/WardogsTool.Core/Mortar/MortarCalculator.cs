@@ -15,6 +15,7 @@ public static class MortarCalculator
 {
     public const double MetersPerUnit = 100;
     public const string NonFiniteMessage = "坐标必须是有限数字（不支持 inf / nan）";
+    public const string RangeTooLargeMessage = "距离太大";
 
     /// <summary>
     /// Bearing is a compass bearing (north 0°, east 90°), so atan2 takes (east, north) — the
@@ -47,7 +48,11 @@ public static class MortarCalculator
             return false;
         var range = Math.Floor(distance + 0.5);
         if (range >= long.MaxValue)
+        {
+            // Python prints the exact big integer; only reachable with coordinates around 1e17.
+            error = RangeTooLargeMessage;
             return false;
+        }
 
         solution = new MortarSolution(bearing, distance, RoundDirection(bearing), (long)range);
         error = "";

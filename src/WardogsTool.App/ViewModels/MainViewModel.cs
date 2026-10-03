@@ -93,11 +93,16 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
-    /// <summary>Python stop_all(): anti-AFK first, then the hammer.</summary>
+    /// <summary>
+    /// Python stop_all(): anti-AFK, then the hammer. Python's stop_afk() returns at once, so the
+    /// hammer is stopped before waiting for any anti-AFK key-up — otherwise that wait (up to
+    /// 50 ms) could let the hammer send one more click or release late.
+    /// </summary>
     public void StopAll()
     {
-        _afk.Stop();
+        _afk.RequestStop();
         _hammer.Stop();
+        _afk.Stop();
         Refresh();
     }
 

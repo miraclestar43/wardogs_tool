@@ -18,6 +18,7 @@ Setup: WARDOGS in borderless windowed mode, the tool started normally (not as ad
 - [ ] **(in game)** 310 ms (小/中锤) builds with a small/medium hammer at the expected rate.
 - [ ] **(in game)** 510 ms (大锤) builds with the large hammer at the expected rate.
 - [ ] **(in game)** Compare with the Python tool on the same structure: same hits per minute, same building progress.
+- [ ] **(in game)** Same rate with the tool window behind the game or minimized (Windows 11 throttles timers of hidden windows; the port is built not to be affected).
 - [ ] The preset radios are disabled while running and re-enabled after Esc.
 
 ## Simultaneous hammer + anti-AFK

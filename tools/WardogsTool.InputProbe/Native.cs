@@ -100,6 +100,12 @@ internal static partial class Native
     public static extern bool GetWindowRect(nint hwnd, out RECT rect);
 
     [DllImport("user32.dll")]
+    public static extern bool ShowWindow(nint hwnd, int cmd);
+
+    [DllImport("user32.dll")]
+    public static extern bool IsIconic(nint hwnd);
+
+    [DllImport("user32.dll")]
     public static extern bool SetWindowPos(nint hwnd, nint after, int x, int y, int cx, int cy, uint flags);
 
     [DllImport("user32.dll")]

@@ -84,6 +84,11 @@ internal static class Program
                 using var backup = new SettingsBackup();
                 try
                 {
+                    if (only == "minimized")
+                    {
+                        results.Add(Scenarios.HammerMinimized(probe, new PythonTarget(python, repoRoot), 310));
+                        results.Add(Scenarios.HammerMinimized(probe, new CSharpTarget(exe), 310));
+                    }
                     if (only is "all" or "python")
                     {
                         if (string.IsNullOrEmpty(python)) throw new AbortException("--python is required");

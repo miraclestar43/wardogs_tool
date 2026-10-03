@@ -115,7 +115,10 @@ public sealed class FakeKeyboard : IKeyboardInput
 
     public bool TryGetVirtualKey(char c, out byte virtualKey) => _keys.TryGetValue(c, out virtualKey);
 
-    public void KeyDown(byte virtualKey)
+    /// <summary>US-layout set-1 scan codes for the keys the tests use.</summary>
+    public byte GetScanCode(byte virtualKey) => virtualKey switch { 0x43 => 0x2E, 0x31 => 0x02, 0xBF => 0x35, _ => 0 };
+
+    public void KeyDown(byte virtualKey, byte scanCode)
     {
         lock (_time!.Log)
         {
@@ -126,7 +129,7 @@ public sealed class FakeKeyboard : IKeyboardInput
         }
     }
 
-    public void KeyUp(byte virtualKey)
+    public void KeyUp(byte virtualKey, byte scanCode)
     {
         lock (_time!.Log)
             _time.Log.Add(new LogEntry($"up {virtualKey:X2}", _time.Now));

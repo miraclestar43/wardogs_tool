@@ -101,13 +101,11 @@ public sealed class AntiAfkEngine
     }
 
     /// <summary>
-    /// Stops the schedule and waits (up to 1 s) for outstanding key-ups. Safe to call when not
-    /// running.
+    /// Cancels the schedule without waiting — Python's stop_afk() also returns at once. Key-ups
+    /// already owed still go out on the worker. Safe to call when not running.
     /// </summary>
-    /// <returns>true if the worker has exited.</returns>
-    public bool Stop()
+    public void RequestStop()
     {
-        Thread? worker;
         lock (_gate)
         {
             if (_stop is { IsCancellationRequested: false } stop)
@@ -116,9 +114,20 @@ public sealed class AntiAfkEngine
                     _state = AntiAfkState.Stopping;
                 stop.Cancel();
             }
-            worker = _worker;
         }
         Interlocked.Exchange(ref _nextRoundTicks, -1);
+    }
+
+    /// <summary>
+    /// <see cref="RequestStop"/>, then waits (up to 1 s) for outstanding key-ups.
+    /// </summary>
+    /// <returns>true if the worker has exited.</returns>
+    public bool Stop()
+    {
+        RequestStop();
+        Thread? worker;
+        lock (_gate)
+            worker = _worker;
         if (worker is null)
             return true;
         return worker.Join(StopJoinTimeout);
@@ -160,13 +169,13 @@ public sealed class AntiAfkEngine
                         break;
 
                     case EventKind.KeyDown:
-                        _keyboard.KeyDown(plan.VirtualKey);
+                        _keyboard.KeyDown(plan.VirtualKey, plan.ScanCode);
                         keysDown++;
                         Schedule(_time.Now + TimeSpan.FromMilliseconds(KeyHoldMs), EventKind.KeyUp);
                         break;
 
                     case EventKind.KeyUp:
-                        _keyboard.KeyUp(plan.VirtualKey);
+                        _keyboard.KeyUp(plan.VirtualKey, plan.ScanCode);
                         keysDown--;
                         break;
                 }
@@ -183,7 +192,7 @@ public sealed class AntiAfkEngine
             {
                 try
                 {
-                    _keyboard.KeyUp(plan.VirtualKey);
+                    _keyboard.KeyUp(plan.VirtualKey, plan.ScanCode);
                 }
                 catch (Exception ex)
                 {

@@ -44,7 +44,7 @@ public partial class App : Application
         };
 
         _timerResolution = TimerResolution.Begin();
-        var time = new SystemTimeSource();
+        var time = new HighResolutionTimeSource();
         var keyboard = new WindowsKeyboardInput();
         _hammer = new HammerEngine(new WindowsMouseInput(), time);
         _afk = new AntiAfkEngine(keyboard, time);
@@ -81,8 +81,9 @@ public partial class App : Application
 
     private void EmergencyRelease()
     {
-        try { _afk?.Stop(); } catch { /* exiting anyway */ }
+        try { _afk?.RequestStop(); } catch { /* exiting anyway */ }
         try { _hammer?.Stop(); } catch { /* exiting anyway */ }
+        try { _afk?.Stop(); } catch { /* exiting anyway */ }
     }
 
     protected override void OnExit(ExitEventArgs e)

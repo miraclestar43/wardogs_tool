@@ -2618,6 +2618,24 @@
     0
    ],
    "target": [
+    1e+17,
+    0
+   ],
+   "bearing": 90.0,
+   "distance": 1e+19,
+   "direction": 90,
+   "range": 10000000000000000000,
+   "directionText": "DIRECTION: 090°",
+   "rangeText": "RANGE:     10000000000000000000 m",
+   "exactText": "Bearing exact: 90.00°   Range exact: 10000000000000000000.00 m",
+   "historyText": "(1e+17, 0)  090°  10000000000000000000 m"
+  },
+  {
+   "mortar": [
+    0,
+    0
+   ],
+   "target": [
     1234567.0,
     0.0001
    ],
@@ -74934,6 +74952,42 @@
    "ok": true,
    "x": "0.0",
    "y": "1.0"
+  },
+  {
+   "input": "1\\2 3",
+   "ok": false,
+   "error": "could not convert string to float: '1\\\\2'"
+  },
+  {
+   "input": "104.39​ 63.59",
+   "ok": false,
+   "error": "could not convert string to float: '104.39\\u200b'"
+  },
+  {
+   "input": "1 2",
+   "ok": false,
+   "error": "could not convert string to float: '1\\x7f'"
+  },
+  {
+   "input": "it's 1",
+   "ok": false,
+   "error": "could not convert string to float: \"it's\""
+  },
+  {
+   "input": "'\"x 1",
+   "ok": false,
+   "error": "could not convert string to float: '\\'\"x'"
+  },
+  {
+   "input": "𝟏𝟎 5",
+   "ok": true,
+   "x": "10.0",
+   "y": "5.0"
+  },
+  {
+   "input": "𝟏x 5",
+   "ok": false,
+   "error": "could not convert string to float: '𝟏x'"
   }
  ],
  "antiAfk": [
@@ -75198,6 +75252,67 @@
    "gapValue": 500,
    "periodMs": null,
    "pythonSchedulerError": "ValueError: cannot convert float NaN to integer"
+  },
+  {
+   "key": "c",
+   "count": "2",
+   "gap": "500",
+   "period": "1e308",
+   "ok": true,
+   "vk": 67,
+   "countValue": 2,
+   "gapValue": 500,
+   "periodMs": null,
+   "pythonSchedulerError": "OverflowError: cannot convert float infinity to integer"
+  },
+  {
+   "key": "c",
+   "count": "2",
+   "gap": "500",
+   "period": "1e12",
+   "ok": true,
+   "vk": 67,
+   "countValue": 2,
+   "gapValue": 500,
+   "periodMs": 1000000000000000
+  },
+  {
+   "key": "c",
+   "count": "1",
+   "gap": "10000000000000000000",
+   "period": "180",
+   "ok": true,
+   "vk": 67,
+   "countValue": 1,
+   "gapValue": 10000000000000000000,
+   "periodMs": 180000
+  },
+  {
+   "key": "c",
+   "count": "99999999999999999999",
+   "gap": "x",
+   "period": "180",
+   "ok": false,
+   "error": "invalid literal for int() with base 10: 'x'"
+  },
+  {
+   "key": "c",
+   "count": "99999999999999999999",
+   "gap": "0",
+   "period": "180",
+   "ok": true,
+   "vk": 67,
+   "countValue": 99999999999999999999,
+   "gapValue": 0,
+   "periodMs": 180000
+  },
+  {
+   "key": "c",
+   "count": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "gap": "1",
+   "period": "1",
+   "ok": false,
+   "error": "invalid literal for int() with base 10: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   }
  ]
 }

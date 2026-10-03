@@ -23,10 +23,10 @@ public interface ITimeSource
 /// Stopwatch clock; waits block on the cancellation handle so a stop wakes the worker immediately.
 /// </summary>
 /// <remarks>
-/// Wait precision depends on the system timer resolution. The app raises it to 1 ms for its
-/// lifetime (timeBeginPeriod(1)), as the Python tool does; without that a 40 ms wait can take ~46 ms.
-/// The Python tool sleeps in 5 ms slices and polls the stop flag; waiting on the handle gives the
-/// same deadline without polling.
+/// Portable, used by tests. Its precision depends on the system timer resolution, which Windows 11
+/// does not keep raised for a minimized or covered window-owning process — so the app uses the
+/// Windows-only HighResolutionTimeSource (a high-resolution waitable timer, like CPython's
+/// time.sleep) instead, with this as its fallback.
 /// </remarks>
 public sealed class SystemTimeSource : ITimeSource
 {

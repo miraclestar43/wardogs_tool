@@ -40,6 +40,17 @@ internal static partial class NativeMethods
     [LibraryImport("user32.dll")]
     public static partial uint MapVirtualKeyW(uint uCode, uint uMapType);
 
+    public const uint CREATE_WAITABLE_TIMER_HIGH_RESOLUTION = 0x00000002;
+    public const uint TIMER_ALL_ACCESS = 0x001F0003;
+
+    [LibraryImport("kernel32.dll", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
+    public static partial Microsoft.Win32.SafeHandles.SafeWaitHandle CreateWaitableTimerExW(nint attributes, string? name, uint flags, uint access);
+
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool SetWaitableTimer(Microsoft.Win32.SafeHandles.SafeWaitHandle timer, ref long dueTime, int period,
+        nint completionRoutine, nint argToCompletionRoutine, [MarshalAs(UnmanagedType.Bool)] bool resume);
+
     [LibraryImport("winmm.dll")]
     public static partial uint timeBeginPeriod(uint uPeriod);
 

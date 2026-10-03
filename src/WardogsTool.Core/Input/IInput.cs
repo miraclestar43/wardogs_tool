@@ -22,6 +22,12 @@ public interface IKeyboardInput
     /// </summary>
     bool TryGetVirtualKey(char c, out byte virtualKey);
 
-    void KeyDown(byte virtualKey);
-    void KeyUp(byte virtualKey);
+    /// <summary>
+    /// MapVirtualKeyW(vk, MAPVK_VK_TO_VSC). Keyboard layouts are per thread, so this is called
+    /// during validation on the UI thread — where Python's tap() calls it — not on the worker.
+    /// </summary>
+    byte GetScanCode(byte virtualKey);
+
+    void KeyDown(byte virtualKey, byte scanCode);
+    void KeyUp(byte virtualKey, byte scanCode);
 }

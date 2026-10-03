@@ -1,20 +1,35 @@
 # Input probe report
 
-Run: 2026-10-03 14:42 · Microsoft Windows NT 10.0.26100.0 · C# build: `WardogsTool.exe`
+Run: 2026-10-03 14:59 · Microsoft Windows NT 10.0.26100.0 · C# build: `WardogsTool.exe`
 
-Result: **20/20 scenarios passed**. Left-button presses that reached the probe window: 100.
+Result: **22/22 scenarios passed**. Left-button presses that reached the probe window: 138.
+
+## Hammer 310 ms, tool window minimized
+
+| | Python | C# |
+|---|---|---|
+| **result** | PASS | PASS |
+| first mouse-down after F9 ms | 37.7 | 10.4 |
+| hold n | 17 | 17 |
+| hold mean/min/max ms | 310.7 / 310.4 / 310.9 | 310.7 / 310.4 / 311.3 |
+| gap n | 17 | 17 |
+| gap mean/min/max ms | 40.7 / 40.4 / 41.6 | 40.6 / 40.4 / 41.2 |
+| mouse-up after Esc ms | 35.8 | 3.8 |
+| downs / ups | 18 / 18 | 18 / 18 |
+| mouse event shapes | LBUTTONDOWN flags=0x1 mouseData=0x0 extra=0x0; LBUTTONUP flags=0x1 mouseData=0x0 extra=0x0 | LBUTTONDOWN flags=0x1 mouseData=0x0 extra=0x0; LBUTTONUP flags=0x1 mouseData=0x0 extra=0x0 |
+| tool window minimized | True | True |
 
 ## Hammer 310 ms, stop during hold
 
 | | Python | C# |
 |---|---|---|
 | **result** | PASS | PASS |
-| first mouse-down after F9 ms | 6.0 | 6.9 |
+| first mouse-down after F9 ms | 9.0 | 12.8 |
 | hold n | 8 | 8 |
-| hold mean/min/max ms | 310.7 / 310.5 / 310.9 | 311.1 / 310.8 / 312.1 |
+| hold mean/min/max ms | 310.7 / 310.5 / 310.9 | 310.8 / 310.3 / 311.3 |
 | gap n | 8 | 8 |
-| gap mean/min/max ms | 41.5 / 40.5 / 46.3 | 41.0 / 40.8 / 41.2 |
-| mouse-up after Esc ms | 17.6 | 3.1 |
+| gap mean/min/max ms | 41.3 / 40.4 / 45.9 | 40.7 / 40.4 / 41.0 |
+| mouse-up after Esc ms | 20.2 | 2.1 |
 | downs / ups | 9 / 9 | 9 / 9 |
 | mouse event shapes | LBUTTONDOWN flags=0x1 mouseData=0x0 extra=0x0; LBUTTONUP flags=0x1 mouseData=0x0 extra=0x0 | LBUTTONDOWN flags=0x1 mouseData=0x0 extra=0x0; LBUTTONUP flags=0x1 mouseData=0x0 extra=0x0 |
 
@@ -31,10 +46,10 @@ Result: **20/20 scenarios passed**. Left-button presses that reached the probe w
 | | Python | C# |
 |---|---|---|
 | **result** | PASS | PASS |
-| press times after F8 ms | 3012.0, 3512.0, 6012.1 | 3011.1, 3511.8, 6010.7 |
-| key held ms | 50.5, 50.5, 50.5 | 51.6, 50.9, 50.5 |
-| 2nd press after 1st ms | 500.1 | 500.7 |
-| round 2 after round 1 ms | 3000.1 | 2999.6 |
+| press times after F8 ms | 3001.6, 3502.5, 6001.6 | 3010.7, 3511.2, 6010.3 |
+| key held ms | 50.5, 51.2, 50.5 | 51.0, 51.5, 50.6 |
+| 2nd press after 1st ms | 500.9 | 500.5 |
+| round 2 after round 1 ms | 3000.0 | 2999.6 |
 | key event shapes | KEYDOWN vk=0x43 scan=0x2E flags=0x10 extra=0x0; KEYUP vk=0x43 scan=0x2E flags=0x90 extra=0x0 | KEYDOWN vk=0x43 scan=0x2E flags=0x10 extra=0x0; KEYUP vk=0x43 scan=0x2E flags=0x90 extra=0x0 |
 
 ## Hammer + anti-AFK together, one Esc stops both
@@ -60,19 +75,19 @@ Result: **20/20 scenarios passed**. Left-button presses that reached the probe w
 |---|---|---|
 | **result** | PASS | PASS |
 | process exited | True | True |
-| mouse-up after quit ms | 7.7 | 1.3 |
+| mouse-up after quit ms | 15.1 | 1.4 |
 
 ## Hammer 510 ms, stop during hold
 
 | | Python | C# |
 |---|---|---|
 | **result** | PASS | PASS |
-| first mouse-down after F9 ms | 24.1 | 8.4 |
+| first mouse-down after F9 ms | 5.3 | 15.5 |
 | hold n | 5 | 5 |
-| hold mean/min/max ms | 510.6 / 510.4 / 511.0 | 510.9 / 510.5 / 511.7 |
+| hold mean/min/max ms | 510.7 / 510.4 / 511.0 | 510.7 / 510.4 / 511.3 |
 | gap n | 5 | 5 |
-| gap mean/min/max ms | 41.8 / 40.4 / 46.5 | 41.5 / 41.4 / 41.6 |
-| mouse-up after Esc ms | 6.5 | 1.6 |
+| gap mean/min/max ms | 40.8 / 40.4 / 41.1 | 40.7 / 40.3 / 41.5 |
+| mouse-up after Esc ms | 19.2 | 1.6 |
 | downs / ups | 6 / 6 | 6 / 6 |
 | mouse event shapes | LBUTTONDOWN flags=0x1 mouseData=0x0 extra=0x0; LBUTTONUP flags=0x1 mouseData=0x0 extra=0x0 | LBUTTONDOWN flags=0x1 mouseData=0x0 extra=0x0; LBUTTONUP flags=0x1 mouseData=0x0 extra=0x0 |
 
@@ -82,7 +97,7 @@ Result: **20/20 scenarios passed**. Left-button presses that reached the probe w
 |---|---|---|
 | **result** | PASS | PASS |
 | process exited | True | True |
-| mouse-up after quit ms | 5.5 | 1.0 |
+| mouse-up after quit ms | 1.2 | 0.9 |
 
 ## No errors printed by the tool (stderr)
 

@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -84,53 +85,80 @@ public static partial class PythonNumber
         return true;
     }
 
-    /// <summary>
-    /// Python <c>int(text)</c> in base 10. Python ints are unbounded; values outside the long range
-    /// are rejected here (they would make the Python tool hang or overflow anyway).
-    /// </summary>
-    public static bool TryParseInt(string text, out long value, out string error)
+    /// <summary>Python <c>int(text)</c> in base 10. Unbounded, like Python's int.</summary>
+    public static bool TryParseInt(string text, out BigInteger value, out string error)
     {
-        value = 0;
-        error = $"invalid literal for int() with base 10: {PythonRepr(text)}";
+        value = BigInteger.Zero;
+        // CPython: "invalid literal for int() with base 10: %.200R" — the repr is cut at 200 characters.
+        var repr = PythonRepr(text);
+        error = $"invalid literal for int() with base 10: {(repr.Length > 200 ? repr[..200] : repr)}";
         var ascii = ToAsciiDigits(text);
         if (ascii is null || !IntGrammar().IsMatch(ascii))
             return false;
-        if (!long.TryParse(ascii.Replace("_", ""), NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out value))
-        {
-            error = $"number is too large: {PythonRepr(text)}";
-            return false;
-        }
+        value = BigInteger.Parse(ascii.Replace("_", ""), NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture);
         error = "";
         return true;
     }
 
     /// <summary>
     /// CPython's _PyUnicode_TransformDecimalAndSpaceToASCII followed by strip(): Unicode decimal
-    /// digits become ASCII digits, whitespace is trimmed, any other non-ASCII character is invalid.
+    /// digits (by code point, so astral digits such as U+1D7CE count) become ASCII digits,
+    /// whitespace is trimmed, any other non-ASCII character is invalid.
     /// </summary>
     private static string? ToAsciiDigits(string text)
     {
         var sb = new StringBuilder(text.Length);
-        foreach (var c in text)
+        foreach (var rune in text.EnumerateRunes())
         {
-            if (IsPythonSpace(c))
-            {
+            if (rune.IsBmp && IsPythonSpace((char)rune.Value))
                 sb.Append(' ');
-                continue;
-            }
-            var digit = CharUnicodeInfo.GetDecimalDigitValue(c);
-            if (c > 127 && digit >= 0 && CharUnicodeInfo.GetUnicodeCategory(c) == UnicodeCategory.DecimalDigitNumber)
-                sb.Append((char)('0' + digit));
-            else if (c <= 127)
-                sb.Append(c);
+            else if (rune.IsAscii)
+                sb.Append((char)rune.Value);
+            else if (Rune.GetUnicodeCategory(rune) == UnicodeCategory.DecimalDigitNumber)
+                sb.Append((char)('0' + (int)Rune.GetNumericValue(rune)));
             else
                 return null;
         }
-        var stripped = sb.ToString().Trim(' ');
         // Interior whitespace ("1 0") is not part of either grammar, so the regexes reject it.
-        return stripped;
+        return sb.ToString().Trim(' ');
     }
 
-    /// <summary>Close enough to Python's repr() of a str for error messages.</summary>
-    private static string PythonRepr(string s) => s.Contains('\'') && !s.Contains('"') ? $"\"{s}\"" : $"'{s.Replace("'", "\\'")}'";
+    /// <summary>Python's <c>repr()</c> of a str, for error messages.</summary>
+    public static string PythonRepr(string s)
+    {
+        var quote = s.Contains('\'') && !s.Contains('"') ? '"' : '\'';
+        var sb = new StringBuilder(s.Length + 2).Append(quote);
+        for (var i = 0; i < s.Length; i++)
+        {
+            int cp = s[i];
+            if (char.IsHighSurrogate(s[i]) && i + 1 < s.Length && char.IsLowSurrogate(s[i + 1]))
+                cp = char.ConvertToUtf32(s[i], s[++i]);
+
+            if (cp == quote || cp == '\\') sb.Append('\\').Append((char)cp);
+            else if (cp == '\t') sb.Append("\\t");
+            else if (cp == '\n') sb.Append("\\n");
+            else if (cp == '\r') sb.Append("\\r");
+            else if (cp < 0x20 || cp == 0x7F) sb.Append($"\\x{cp:x2}");
+            else if (cp < 0x7F) sb.Append((char)cp);
+            else if (IsPythonPrintable(cp)) sb.Append(char.ConvertFromUtf32(cp is >= 0xD800 and <= 0xDFFF ? 0xFFFD : cp));
+            else if (cp <= 0xFF) sb.Append($"\\x{cp:x2}");
+            else if (cp <= 0xFFFF) sb.Append($"\\u{cp:x4}");
+            else sb.Append($"\\U{cp:x8}");
+        }
+        return sb.Append(quote).ToString();
+    }
+
+    /// <summary>Python's str.isprintable() for one non-ASCII code point.</summary>
+    private static bool IsPythonPrintable(int cp)
+    {
+        if (cp is >= 0xD800 and <= 0xDFFF)
+            return false; // lone surrogate
+        return CharUnicodeInfo.GetUnicodeCategory(cp) switch
+        {
+            UnicodeCategory.Control or UnicodeCategory.Format or UnicodeCategory.Surrogate or UnicodeCategory.PrivateUse
+                or UnicodeCategory.OtherNotAssigned or UnicodeCategory.LineSeparator or UnicodeCategory.ParagraphSeparator
+                or UnicodeCategory.SpaceSeparator => false,
+            _ => true,
+        };
+    }
 }

@@ -60,6 +60,8 @@ def mortar_cases():
     cases.append((0, 0, -1e-300, 1))
     cases.append((0, 0, -0.0, 1))
     cases.append((0, 0, -1e-17, 1))
+    # Range beyond 64 bits (Python prints the big int).
+    cases.append((0, 0, 1e17, 0))
     # Large coordinates and history formatting with exponents.
     cases.append((0, 0, 1234567.0, 0.0001))
     cases.append((0, 0, 1e-05, 2.5e-07))
@@ -91,6 +93,8 @@ PARSE_INPUTS = [
     "inf 1", "-inf 1", "nan 1", "Infinity 1", "+NaN 1", "1e400 0", "-1e400 0",
     "0x10 1", "1.2.3 4", "abc 1", "1 abc", "1 2abc", "１０４．３９ 1", "- 1", ". 1", "e5 1",
     "0 0", "-0 -0.0", "007 08", "1e-400 1",
+    # repr() escaping in error messages, astral digits
+    "1\\2 3", "104.39​ 63.59", "1\x7f 2", "it's 1", "'\"x 1", "\U0001d7cf\U0001d7ce 5", "\U0001d7cfx 5",
 ]
 
 
@@ -114,6 +118,9 @@ AFK_INPUTS = [
     ("c", "２", "５００", "１８０"), ("c", "2", "500", "1e2"), ("c", "2", "500", "0.0004"),
     ("c", "2", "500", "180.0009"), ("c", "x", "500", "180"), ("c", "2", "x", "180"), ("c", "2", "500", "x"),
     ("c", "2", "500", "-inf"), ("c", "2", "500", "inf"), ("c", "2", "500", "nan"),
+    # beyond what can be scheduled; unbounded ints
+    ("c", "2", "500", "1e308"), ("c", "2", "500", "1e12"), ("c", "1", "10000000000000000000", "180"),
+    ("c", "99999999999999999999", "x", "180"), ("c", "99999999999999999999", "0", "180"), ("c", "x" * 250, "1", "1"),
 ]
 
 

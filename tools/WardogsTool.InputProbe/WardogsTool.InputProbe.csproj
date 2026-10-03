@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Integration probe, not shipped. Drives the real Python tool and the published WardogsTool.exe
+    through their global hotkeys and records the input they inject with low-level hooks.
+    See docs/VALIDATION.md.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>WardogsTool.InputProbe</RootNamespace>
+  </PropertyGroup>
+
+</Project>

@@ -129,7 +129,7 @@
 
                             <TextBlock Margin="0,12,0,0" Style="{StaticResource Hint}">
                                 <Run Text="按住 Hold" /> <Run Text="{Binding HoldMs, Mode=OneWay}" FontWeight="Bold" Foreground="{StaticResource Ink}" /><Run Text=" ms  →  抬起 Release" />
-                                <Run Text="{Binding ReleaseGapMs, Mode=OneWay}" FontWeight="Bold" Foreground="{StaticResource Ink}" /><Run Text=" ms  →  循环 repeat" />
+                                <Run Text="{Binding ReleaseGapMs, Mode=OneWay}" FontWeight="Bold" Foreground="{StaticResource Ink}" /><Run Text=" ms  →  循环" />
                             </TextBlock>
 
                             <Border Style="{StaticResource Badge}" Tag="{Binding IsHammerRunning}" Margin="0,14,0,0">

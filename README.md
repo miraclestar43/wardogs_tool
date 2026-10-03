@@ -1,67 +1,62 @@
-# wardogs_tool · 战狗小工具
+# WARDOGS Tool · 战狗土木 / 建造辅助工具
 
-A small Windows desktop tool for **WARDOGS (战狗)**. It does three things: fast hammering (auto hammer), anti-AFK key presses, and mortar direction/range calculation.
-It's one Python file and uses only the standard library (tkinter + ctypes), so there's nothing to install.
+**Fast hammering for building in WARDOGS, plus anti-AFK and a mortar calculator.**
+**WARDOGS（战狗）土木 / 建造辅助：快速敲锤，附带防挂机和迫击炮计算。**
 
-**WARDOGS（战狗）** 的 Windows 桌面小工具，有三个功能：**快速敲锤**（自动敲锤、速敲、光速敲锤，支持小锤 / 中锤 / 大锤）、**防挂机**（定时自动按键），以及**迫击炮计算**（方向和距离）。单个 Python 文件，只用标准库，无需安装任何依赖。
+WARDOGS Tool takes the clicking out of construction: press **F9** and it hammers for you, with the right hold time for small, medium and large hammers. It is a small native Windows app — one `WardogsTool.exe`, no Python, no .NET install, no administrator rights.
 
-> Keywords / 关键词：WARDOGS, 战狗, 敲锤, 快速敲锤, 速敲, 光速敲锤, 自动敲锤, 小锤, 中锤, 大锤, 防挂机, anti-AFK, 迫击炮, mortar calculator, auto hammer
+做工兵、修建、盖建筑时不用再狂点鼠标：按 **F9** 自动敲锤（速敲 / 光速敲锤），小锤、中锤、大锤各有合适的按住时长。单个 `WardogsTool.exe`，双击即用，不需要 Python，不需要安装 .NET，不需要管理员权限。
+
+| Feature 功能 | Hotkey 快捷键 |
+|---|---|
+| **Fast hammer / 快速敲锤** — builder & engineer construction | **F9** |
+| Anti-AFK / 防挂机 | F8 |
+| Mortar calculator / 迫击炮计算 | (Mortar tab) |
+| Stop everything / 全部停止 | **Esc** |
+| Stop and quit / 停止并退出 | F12 |
+
+Hotkeys are global (they work while the game has focus) and are only observed, never swallowed: the game still receives F8, F9 and Esc.
+快捷键全局有效（游戏在前台时也能用），只监听、不拦截：游戏照常收到 F8、F9、Esc。
 
 ---
 
-## Run · 运行
+## 1. Fast hammer · 快速敲锤（F9）
 
-Requires Windows and Python 3.8+. / 需要 Windows 和 Python 3.8 以上。
+The main feature. Hold the hammer, let go, hit again — automatically:
 
-```powershell
-python wardogs_tool.py
+主功能。自动循环：按住左键 → 松开 → 再敲：
+
+```
+mouse left down ──hold──▶ mouse left up ──40 ms──▶ repeat
+左键按下 ──按住时长──▶ 左键抬起 ──40 ms──▶ 循环
 ```
 
-Self-test (mortar calculation) / 自检（迫击炮计算）：
+| Hold 按住时长 | Hammer 锤子 |
+|---|---|
+| **310 ms** | Small / medium hammer 小锤 / 中锤 |
+| **510 ms** | Large hammer 大锤 |
 
-```powershell
-python wardogs_tool.py --test
-```
+- Choose the preset on the **Hammer / 敲锤** tab, press **F9** in game, press **Esc** to stop.
+  在「敲锤」页选好档位，进游戏按 **F9** 开始，按 **Esc** 停止。
+- The first hit happens immediately. A big **RUNNING / STOPPED** badge shows the state.
+  第一下立即敲下；页面上的 **RUNNING / STOPPED** 标志显示是否在敲。
+- Stopping, pressing F12, or closing the window always releases the left mouse button — the tool never leaves it held down.
+  停止、按 F12 或关闭窗口时都会松开左键，不会让鼠标卡在按下状态。
 
-## Hotkeys · 快捷键
+## 2. Anti-AFK · 防挂机（F8）
 
-Hotkeys are global, so they work while the game window is focused.
-快捷键是全局的，游戏窗口在前台时也有效。
+Presses a key on a timer so you are not kicked for being idle. Default: press `c` twice, 500 ms apart, every 180 seconds; each press is held 50 ms. Key, count, gap and period can be changed on the **Anti-AFK / 防挂机** tab (stop with Esc first). The first press comes one full period after F8; the tab shows the countdown.
 
-| Key 键 | Action | 功能 |
-|---|---|---|
-| **F8** | Start anti-AFK | 开始防挂机 |
-| **F9** | Start fast hammering | 开始快速敲锤 |
-| **Esc** | Stop everything | 全部停止 |
-| **F12** | Stop and quit | 停止并退出 |
+定时自动按键，避免挂机被踢。默认每 180 秒按 2 下 `c`，间隔 500 ms，每下按住 50 ms。按键、次数、间隔、周期可在「防挂机」页修改（先按 Esc 停止）。按 F8 后第一次按键在一个周期之后，页面会显示倒计时。
 
-## Features · 功能
+Hammer and anti-AFK can run at the same time; Esc stops both.
+敲锤和防挂机可以同时运行，Esc 一起停止。
 
-### Fast hammering · 快速敲锤（F9）
+## 3. Mortar calculator · 迫击炮计算
 
-Hammers automatically in a loop: hold the left mouse button → release for 40 ms → hold again. There are two hold durations:
+A secondary utility on the **Mortar / 迫击炮** tab. Type the mortar position once (`100.32 59.45`, Enter), then each target (`104.39 63.59` or `104.39, 63.59`, Enter):
 
-自动循环敲锤，也就是"速敲 / 光速敲锤"：按住鼠标左键 → 抬起 40 ms → 再按下。按住时长有两档：
-
-| Hold 按住时长 | For | 适用 |
-|---|---|---|
-| 310 ms | Small / medium hammer | 小锤 / 中锤 |
-| 510 ms | Large hammer | 大锤 |
-
-### Anti-AFK · 防挂机（F8）
-
-Presses a key a few times every period so you don't get kicked for being idle. By default it presses `c` twice, 500 ms apart, every 180 seconds. You can change the key, count, gap and period on the 按键 (Keys) tab. The first press comes one full period after you press F8, and the status bar counts down to it. The settings are locked while it runs, so press Esc first to change them.
-
-每隔一个周期自动按几下指定按键，防止挂机被踢。默认每 180 秒按 2 下 `c`，两下间隔 500 ms。按键、次数、间隔和周期都可以在「按键」页修改。按 F8 后，第一次按键在一个周期之后，状态栏会显示倒计时。运行时设置不能改，先按 Esc 停止再改。
-
-### Mortar calculator · 迫击炮计算（「迫击炮」tab）
-
-1. Enter the mortar position in 迫击炮 X Y, e.g. `100.32 59.45`, then press Enter.
-   在「迫击炮 X Y」里输入迫击炮坐标，例如 `100.32 59.45`，按回车。
-2. Enter the target in 目标 X Y, e.g. `104.39 63.59`, then press Enter.
-   在「目标 X Y」里输入目标坐标，例如 `104.39 63.59`，按回车。
-3. The direction and range appear in large text, with the exact values below.
-   结果以大字显示方向和距离，下面是精确值。
+附带的小工具，在「迫击炮」页。先输入一次炮位（`100.32 59.45`，回车），再逐个输入目标（`104.39 63.59` 或 `104.39, 63.59`，回车）：
 
 ```
 DIRECTION: 045°
@@ -69,27 +64,63 @@ RANGE:     581 m
 Bearing exact: 44.51°   Range exact: 580.56 m
 ```
 
-After each calculation the target field is selected, so you can type the next target straight away while the mortar position stays the same. To move the mortar, edit its field. You can separate X and Y with a space or a comma. The last 20 results are listed in the history below.
+The target box is selected after each result, so you can type the next target straight away; the mortar position is kept. The last 20 results are listed.
+算完后目标框自动全选，直接输入下一个目标；炮位保持不变；保留最近 20 条结果。
 
-算完后目标框会自动全选，直接输入下一个目标即可，迫击炮坐标保持不变。要换迫击炮位置，直接修改那一栏。坐标用空格或逗号分隔都可以。最近 20 次结果显示在下方历史中。
+Convention 坐标约定: +X east 东, +Y north 北, 1.00 = 100 m; bearing north 0°, east 90°, south 180°, west 270°; direction rounded to whole degrees (359.5° → 000°), range to whole metres.
 
-**Coordinate convention · 坐标约定**
-
-- X increases eastward, Y increases northward. / X 向东增加，Y 向北增加。
-- 1.00 coordinate unit = 100 m. / 1.00 坐标单位 = 100 米。
-- Direction is a compass bearing: North 0°, East 90°, South 180°, West 270°. / 方向是罗盘方位：北 0°、东 90°、南 180°、西 270°。
-- Direction is rounded to the nearest degree and range to the nearest meter. / 方向四舍五入到整度，距离四舍五入到整米。
-
-```python
+```text
 dx = target_x - mortar_x
 dy = target_y - mortar_y
-distance_m = math.hypot(dx, dy) * 100
-bearing_deg = math.degrees(math.atan2(dx, dy)) % 360
+range   = sqrt(dx² + dy²) × 100
+bearing = atan2(dx, dy) in degrees, normalised to [0, 360)
 ```
 
-## Notes · 其他
+---
 
-- Tick 窗口置顶 (Always on top) at the bottom of the window to keep the tool above the game.
-  勾选窗口底部的「窗口置顶」，工具窗口会保持在游戏上面。
-- If the game runs as administrator, run this tool as administrator too, or the simulated keys and clicks may be ignored.
-  如果游戏以管理员身份运行，工具也要用管理员身份运行，否则模拟的按键和鼠标可能不起作用。
+## Download & run · 下载与运行
+
+Windows 10/11 x64. Build the portable EXE yourself (below), then double-click `dist\WardogsTool-portable\WardogsTool.exe`. Settings (preset, anti-AFK values, mortar position, always-on-top, window position, tab) are saved to `%AppData%\WardogsTool\settings.json`.
+
+Windows 10/11 x64。按下面的命令生成便携版，双击 `dist\WardogsTool-portable\WardogsTool.exe` 即可。设置保存在 `%AppData%\WardogsTool\settings.json`。
+
+- Tick **窗口置顶 / Always on top** to keep the tool above the game. 勾选「窗口置顶」让工具浮在游戏上面。
+- If the game runs as administrator, run the tool as administrator too, or Windows blocks its input. 游戏以管理员身份运行时，工具也要以管理员身份运行，否则按键和点击会被系统拦截。
+- The tool only sends normal Windows mouse/keyboard input. It does not touch the game process, its memory or its files. 本工具只发送普通的 Windows 键鼠输入，不注入、不读写游戏内存、不修改游戏文件。
+
+## Build · 构建
+
+Requires the .NET 10 SDK. The scripts use `C:\dotnet10\dotnet.exe` (set `WARDOGS_DOTNET` to use another one) and stop with an error if it is missing; they never fall back to a system `dotnet` without the SDK.
+
+```powershell
+# one-time: install the SDK user-locally (no admin)
+powershell -ExecutionPolicy Bypass -File dotnet-install.ps1 -Channel 10.0 -InstallDir C:\dotnet10 -NoPath
+
+build.cmd      # Release build
+test.cmd       # unit tests
+publish.cmd    # → dist\WardogsTool-portable\WardogsTool.exe (self-contained, single file, ~59 MB)
+```
+
+`WardogsTool.exe --test` runs the mortar self-test (exit code 0 = pass).
+
+## Project layout
+
+```text
+src/WardogsTool.Core/          game-independent logic, no Windows/WPF dependency
+  Hammer/ AntiAfk/             state machines behind IMouseInput / IKeyboardInput / ITimeSource
+  Mortar/ Parsing/             mortar maths, display strings, coordinate parsing
+  Input/ Settings/ Timing/
+src/WardogsTool.App/           WPF app
+  Platform/Windows/            the only Win32 interop (input, Raw Input hotkeys, timer resolution)
+  ViewModels/ Views/
+tests/WardogsTool.Core.Tests/  xUnit, incl. parity fixtures recorded from the Python tool
+tools/WardogsTool.InputProbe/  integration probe (drives both tools, records injected input)
+tools/parity/                  Python fixture generator and driver
+wardogs_tool.py                original Python/Tkinter version — behavioural reference, kept during the migration
+```
+
+See [docs/PORTING.md](docs/PORTING.md) for the behaviour inventory and validation, and [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md) for the in-game checklist.
+
+### Python version · Python 版
+
+The original single-file Python/Tkinter tool is still here as the reference: `python wardogs_tool.py` (Python 3.8+, standard library only). 原来的 Python 单文件版仍保留，作为行为基准。

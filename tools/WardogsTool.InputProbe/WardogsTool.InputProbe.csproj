@@ -3,7 +3,7 @@
   <!--
     Integration probe, not shipped. Drives the real Python tool and the published WardogsTool.exe
     through their global hotkeys and records the input they inject with low-level hooks.
-    See docs/VALIDATION.md.
+    See docs/PORTING.md.
   -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>

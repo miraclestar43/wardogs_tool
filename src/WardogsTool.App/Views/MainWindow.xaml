@@ -1,0 +1,276 @@
+<Window x:Class="WardogsTool.App.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="WARDOGS Tool · 战狗土木 / 建造辅助工具"
+        SizeToContent="WidthAndHeight"
+        ResizeMode="CanMinimize"
+        Topmost="{Binding AlwaysOnTop}"
+        FontFamily="Microsoft YaHei UI, Segoe UI"
+        FontSize="13"
+        Background="#F3F4F6"
+        UseLayoutRounding="True">
+
+    <Window.Resources>
+        <SolidColorBrush x:Key="Ink" Color="#111827" />
+        <SolidColorBrush x:Key="Muted" Color="#6B7280" />
+        <SolidColorBrush x:Key="CardBrush" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="Line" Color="#E5E7EB" />
+        <SolidColorBrush x:Key="Running" Color="#15803D" />
+        <SolidColorBrush x:Key="Stopped" Color="#6B7280" />
+        <SolidColorBrush x:Key="Accent" Color="#C2410C" />
+        <SolidColorBrush x:Key="Error" Color="#DC2626" />
+
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource CardBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="14" />
+        </Style>
+
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{StaticResource Ink}" />
+            <Setter Property="Margin" Value="0,0,0,10" />
+        </Style>
+
+        <Style x:Key="Hint" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource Muted}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="14,6" />
+            <Setter Property="MinWidth" Value="96" />
+        </Style>
+
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Background" Value="{StaticResource Accent}" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Padding" Value="16,9" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#9A3412" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#7C2D12" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bg" Property="BorderBrush" Value="{StaticResource Ink}" />
+                                <Setter TargetName="Bg" Property="BorderThickness" Value="2" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- RUNNING / STOPPED badge; Tag carries the running flag. -->
+        <Style x:Key="Badge" TargetType="Border">
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="Background" Value="{StaticResource Stopped}" />
+            <Style.Triggers>
+                <Trigger Property="Tag" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Running}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <DockPanel Margin="12" Width="380">
+
+        <!-- Header -->
+        <StackPanel DockPanel.Dock="Top" Margin="2,0,0,10">
+            <TextBlock Text="WARDOGS Tool" FontSize="21" FontWeight="Bold" Foreground="{StaticResource Ink}" />
+            <TextBlock Text="战狗土木 / 建造辅助工具 · fast hammer &amp; building utility" Style="{StaticResource Hint}" />
+        </StackPanel>
+
+        <!-- Footer: same status line as the Python tool, on every tab -->
+        <StackPanel DockPanel.Dock="Bottom" Margin="2,10,0,0">
+            <CheckBox Content="窗口置顶  Always on top" IsChecked="{Binding AlwaysOnTop}" />
+            <TextBlock Text="{Binding StatusText}" Margin="0,6,0,0" Foreground="{StaticResource Ink}" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <TabControl SelectedIndex="{Binding SelectedTab}" Padding="10">
+
+            <!-- 1. Fast hammer: the primary feature and landing tab -->
+            <TabItem Header="敲锤  Hammer">
+                <StackPanel>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Text="FAST HAMMER · 快速敲锤" Style="{StaticResource SectionTitle}" FontSize="17" />
+
+                            <StackPanel IsEnabled="{Binding CanEditHammer}">
+                                <RadioButton GroupName="Hold" IsChecked="{Binding IsSmallMedium}" Margin="0,0,0,8">
+                                    <Grid Width="290">
+                                        <TextBlock Text="小/中锤  Small / Medium" FontSize="14" />
+                                        <TextBlock Text="310 ms" FontSize="14" FontWeight="Bold" HorizontalAlignment="Right" />
+                                    </Grid>
+                                </RadioButton>
+                                <RadioButton GroupName="Hold" IsChecked="{Binding IsLarge}">
+                                    <Grid Width="290">
+                                        <TextBlock Text="大锤  Large" FontSize="14" />
+                                        <TextBlock Text="510 ms" FontSize="14" FontWeight="Bold" HorizontalAlignment="Right" />
+                                    </Grid>
+                                </RadioButton>
+                            </StackPanel>
+
+                            <TextBlock Margin="0,12,0,0" Style="{StaticResource Hint}">
+                                <Run Text="按住 Hold" /> <Run Text="{Binding HoldMs, Mode=OneWay}" FontWeight="Bold" Foreground="{StaticResource Ink}" /><Run Text=" ms  →  抬起 Release" />
+                                <Run Text="{Binding ReleaseGapMs, Mode=OneWay}" FontWeight="Bold" Foreground="{StaticResource Ink}" /><Run Text=" ms  →  循环 repeat" />
+                            </TextBlock>
+
+                            <Border Style="{StaticResource Badge}" Tag="{Binding IsHammerRunning}" Margin="0,14,0,0">
+                                <TextBlock Foreground="White" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="STOPPED · 已停止" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsHammerRunning}" Value="True">
+                                                    <Setter Property="Text" Value="RUNNING · 敲锤中" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
+
+                            <Grid Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Button Style="{StaticResource PrimaryButton}" Command="{Binding StartHammerCommand}" Content="开始敲锤  START  (F9)" />
+                                <Button Grid.Column="2" Command="{Binding StopAllCommand}" Content="停止  STOP  (Esc)" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Margin="2,10,0,0" Style="{StaticResource Hint}"
+                               Text="F9 开始敲锤 · Esc 停止全部 · F12 退出。快捷键全局有效，不会拦截游戏按键。" />
+                </StackPanel>
+            </TabItem>
+
+            <!-- 2. Anti-AFK -->
+            <TabItem Header="防挂机  Anti-AFK">
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="ANTI-AFK · 防挂机（定时按键）" Style="{StaticResource SectionTitle}" />
+                        <Grid IsEnabled="{Binding CanEditAfk}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+                            <Grid.Resources>
+                                <Style TargetType="TextBox">
+                                    <Setter Property="Width" Value="90" />
+                                    <Setter Property="HorizontalAlignment" Value="Left" />
+                                    <Setter Property="Margin" Value="0,3" />
+                                    <Setter Property="Padding" Value="3,2" />
+                                </Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                    <Setter Property="Margin" Value="0,0,12,0" />
+                                </Style>
+                            </Grid.Resources>
+                            <TextBlock Text="按键  Key" />
+                            <TextBox Grid.Column="1" Text="{Binding AfkKey, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Grid.Row="1" Text="每次按几下  Presses" />
+                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding AfkCount, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Grid.Row="2" Text="两下间隔 (ms)  Gap" />
+                            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding AfkGap, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Grid.Row="3" Text="周期 (秒)  Period (s)" />
+                            <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding AfkPeriod, UpdateSourceTrigger=PropertyChanged}" />
+                        </Grid>
+
+                        <Border Style="{StaticResource Badge}" Tag="{Binding IsAfkRunning}" Margin="0,14,0,0" Padding="12,6">
+                            <TextBlock Foreground="White" FontWeight="Bold" HorizontalAlignment="Center">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="STOPPED · 已停止" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsAfkRunning}" Value="True">
+                                                <Setter Property="Text" Value="{Binding AfkCountdown, StringFormat=RUNNING · {0}}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Border>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                            <Button Command="{Binding StartAfkCommand}" Content="开始  START  (F8)" Margin="0,0,8,0" />
+                            <Button Command="{Binding StopAllCommand}" Content="停止  STOP  (Esc)" />
+                        </StackPanel>
+                        <TextBlock Margin="0,10,0,0" Style="{StaticResource Hint}"
+                                   Text="按 F8 后，第一次按键在一个周期之后；每次按键按住 50 ms。运行时设置不能改，先按 Esc 停止。" />
+                    </StackPanel>
+                </Border>
+            </TabItem>
+
+            <!-- 3. Mortar calculator (secondary utility) -->
+            <TabItem Header="迫击炮  Mortar">
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="MORTAR · 迫击炮计算" Style="{StaticResource SectionTitle}" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="迫击炮 X Y" VerticalAlignment="Center" Margin="0,0,12,0" />
+                            <TextBox x:Name="MortarBox" Grid.Column="1" Width="170" HorizontalAlignment="Left" Margin="0,3" Padding="3,2"
+                                     Text="{Binding MortarPosition, UpdateSourceTrigger=PropertyChanged}" KeyDown="MortarBox_KeyDown" />
+                            <TextBlock Grid.Row="1" Text="目标 X Y" VerticalAlignment="Center" Margin="0,0,12,0" />
+                            <TextBox x:Name="TargetBox" Grid.Row="1" Grid.Column="1" Width="170" HorizontalAlignment="Left" Margin="0,3" Padding="3,2"
+                                     Text="{Binding TargetPosition, UpdateSourceTrigger=PropertyChanged}" KeyDown="TargetBox_KeyDown" />
+                        </Grid>
+                        <TextBlock Text="例: 104.39 63.59，回车计算" Style="{StaticResource Hint}" Margin="0,2,0,0" />
+
+                        <TextBlock Text="{Binding DirectionText}" FontFamily="Consolas" FontSize="28" FontWeight="Bold" Margin="0,12,0,0" Foreground="{StaticResource Ink}" />
+                        <TextBlock Text="{Binding RangeText}" FontFamily="Consolas" FontSize="28" FontWeight="Bold" Foreground="{StaticResource Ink}" />
+                        <TextBlock Text="{Binding ExactText}" FontFamily="Consolas" FontSize="12" Margin="0,4,0,8" TextWrapping="Wrap">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{StaticResource Ink}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ExactIsError}" Value="True">
+                                            <Setter Property="Foreground" Value="{StaticResource Error}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+
+                        <TextBlock Text="历史  History" Style="{StaticResource Hint}" />
+                        <ListBox ItemsSource="{Binding History}" Height="118" FontFamily="Consolas" FontSize="12" Margin="0,2,0,0" />
+                        <TextBlock Margin="0,8,0,0" Style="{StaticResource Hint}"
+                                   Text="X 向东、Y 向北，1.00 = 100 m；方向：北 0°、东 90°、南 180°、西 270°。" />
+                    </StackPanel>
+                </Border>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>

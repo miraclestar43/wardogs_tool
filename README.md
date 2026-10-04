@@ -11,13 +11,13 @@ WardogsTool takes the clicking out of construction: press **F9** and it hammers 
 |---|---|
 | **快速敲锤 Fast hammer**（土木 / 建造 / 工兵 builder & engineer） | **F9** |
 | 防挂机 Anti-AFK | F8 |
-| 放大镜 Magnifier（屏幕中心放大 centre-screen zoom） | F10 |
+| 放大镜 Magnifier：关 → 2.0x → 3.0x → 4.0x → 关 OFF → 2x → 3x → 4x → OFF | F10 |
 | 迫击炮计算 Mortar calculator | 「迫击炮」页 Mortar tab |
-| 停止敲锤和防挂机 Stop hammer + anti-AFK | **Esc** |
-| 停止并退出 Stop and quit | F12 |
+| **全部停止**（敲锤、防挂机、放大镜），不退出 · Stop everything (hammer, anti-AFK, magnifier), stay open | **Esc** |
+| 全部停止并退出 Stop everything and quit | F12 |
 
-快捷键全局有效（游戏在前台时也能用），只监听、不拦截：游戏照常收到 F8、F9、F10、Esc。
-Hotkeys are global and only observed, never swallowed: the game still receives F8, F9, F10 and Esc.
+快捷键全局有效（游戏在前台时也能用），只监听、不拦截：游戏照常收到 F8、F9、F10、Esc。Esc 是紧急停止：停下敲锤和防挂机、松开工具按下的鼠标键和按键、关掉放大镜，工具本身保持打开。
+Hotkeys are global and only observed, never swallowed: the game still receives F8, F9, F10 and Esc. Esc is the emergency stop: it stops hammering and anti-AFK, releases anything the tool holds, hides the magnifier, and leaves the tool open.
 
 ---
 
@@ -36,8 +36,8 @@ mouse down ──hold──▶ mouse up ──40 ms──▶ repeat
 | **310 ms** | 小锤 / 中锤 Small / medium hammer |
 | **510 ms** | 大锤 Large hammer |
 
-- 在「敲锤」页选好档位，进游戏按 **F9** 开始；按 **Esc** 或「停止敲锤」停止。第一下立即敲下，页面上的 **RUNNING / STOPPED** 标志显示状态。
-  Pick the preset on the **Hammer** tab, press **F9** in game; **Esc** or the stop button stops it. The first hit is immediate.
+- 在「敲锤」页选好档位，进游戏按 **F9** 开始；按 **Esc** 或「停止」按钮全部停止。第一下立即敲下，页面上的 **RUNNING / STOPPED** 标志显示状态。
+  Pick the preset on the **Hammer** tab, press **F9** in game; **Esc** or the Stop button stops everything. The first hit is immediate.
 - 停止、按 F12 或关闭窗口时一定会松开左键，不会让鼠标卡在按下状态。工具只松开它自己按下的键。
   Stopping, F12 or closing the window always releases the left button; the tool only releases a button it pressed itself.
 - 工具窗口最小化或被游戏挡住时，敲击节奏不变。
@@ -49,8 +49,8 @@ mouse down ──hold──▶ mouse up ──40 ms──▶ repeat
 
 Presses a key on a timer so you are not kicked for being idle. Default: `c` twice, 500 ms apart, every 180 s, each held 50 ms. The first press comes one full period after F8.
 
-敲锤和防挂机可以同时运行。各自页面的「停止」按钮只停自己那一项；**Esc 两个都停**。
-Hammer and anti-AFK can run together. Each tab's stop button stops only that feature; **Esc stops both**.
+F8 和 F9 各自启动，可以同时运行。任何「停止」按钮和 **Esc** 都是全部停止（敲锤、防挂机、放大镜）。
+F8 and F9 start independently and can run together. Every Stop button and **Esc** stop everything (hammer, anti-AFK, magnifier).
 
 ## 3. 迫击炮计算 · Mortar calculator
 
@@ -77,9 +77,9 @@ bearing = atan2(dx, dy) in degrees, normalised to [0, 360)
 
 ## 4. 放大镜 · Magnifier（F10）
 
-给没有倍镜的武器用：按 **F10** 在屏幕中心显示一个 600×400 的放大镜头，倍率 1.5x / 2.0x / 2.5x / 3.0x / 4.0x（默认 2.0x，会记住）。镜头在游戏所在显示器的中心，鼠标可以穿透，不抢焦点，不出现在任务栏，不画准星。再按 F10 立即关闭。
+给没有倍镜的武器用：在屏幕中心显示一个 600×400 的放大镜头。**F10 每按一次切换一档：关 → 2.0x → 3.0x → 4.0x → 关**，循环往复。「放大镜」页还可以选 1.5x 和 2.5x，再用「开 / 关」按钮打开。镜头在游戏所在显示器的中心，鼠标可以穿透，不抢焦点，不出现在任务栏，不画准星。**Esc** 也会立即关闭它。
 
-For weapons without optics: **F10** shows a 600×400 lens at the centre of the game's monitor, zoom 1.5x–4.0x (default 2.0x, remembered). Click-through, never takes focus, no taskbar entry, no crosshair drawn. F10 again removes it immediately.
+For weapons without optics: a 600×400 lens at the centre of the game's monitor. **Each F10 press advances one step: OFF → 2.0x → 3.0x → 4.0x → OFF.** The Magnifier tab also offers 1.5x and 2.5x with its on/off button. Click-through, never takes focus, no taskbar entry, no crosshair drawn. **Esc** removes it immediately too.
 
 放大镜使用 Windows 自带的放大 API（Magnification API），只放大屏幕上已经显示出来的画面。请用 **无边框窗口** 模式运行游戏；独占全屏下 Windows 无法合成叠加窗口。
 It uses the documented Windows Magnification API and only enlarges pixels already on screen. Run the game in **borderless windowed** mode; exclusive fullscreen cannot be overlaid.
@@ -88,9 +88,18 @@ It uses the documented Windows Magnification API and only enlarges pixels alread
 
 ## 下载与运行 · Download & run
 
-Windows 10/11 x64。按下面「构建」一节生成 `dist\WardogsTool-portable\WardogsTool.exe`，双击运行。设置（档位、防挂机参数、炮位、放大倍率、窗口置顶、窗口位置）保存在 `%AppData%\WardogsTool\settings.json`。
+Windows 10/11 x64。有两种版本（用下面「构建」一节生成）：
 
-Build the portable EXE (below) and double-click it. Settings are saved to `%AppData%\WardogsTool\settings.json`.
+| 版本 Build | 大小 Size | 需要安装 Needs installed |
+|---|---|---|
+| `dist\WardogsTool-portable\WardogsTool.exe`（推荐 recommended） | 约 59 MB | 什么都不需要 nothing |
+| `dist\WardogsTool-slim\WardogsTool.exe` | 约 0.3 MB | **.NET 10 Desktop Runtime (x64)** |
+
+便携版自带 .NET 运行库，所以体积大；精简版小，但电脑上必须先安装 [.NET 10 Desktop Runtime x64](https://dotnet.microsoft.com/download/dotnet/10.0)，否则 Windows 会提示先安装 .NET，程序不会启动。
+The portable build bundles the .NET runtime, hence its size. The slim build is tiny but requires the **.NET 10 Desktop Runtime (x64)**; without it Windows asks you to install .NET instead of starting the app.
+
+设置（档位、防挂机参数、炮位、放大倍率、窗口置顶、窗口位置）保存在 `%AppData%\WardogsTool\settings.json`。
+Settings are saved to `%AppData%\WardogsTool\settings.json`.
 
 - 在「设置」页勾选「窗口置顶」可以让工具浮在游戏上面。Tick **Always on top** on the Settings tab to keep the tool above the game.
 - 游戏以管理员身份运行时，工具也要以管理员身份运行，否则按键和点击会被 Windows 拦截。If the game runs as administrator, run the tool as administrator too.
@@ -129,7 +138,8 @@ powershell -ExecutionPolicy Bypass -File dotnet-install.ps1 -Channel 10.0 -Insta
 
 build.cmd      # Release 构建
 test.cmd       # 单元测试 unit tests
-publish.cmd    # → dist\WardogsTool-portable\WardogsTool.exe（自包含单文件 self-contained single file，约 59 MB）
+publish.cmd       # → dist\WardogsTool-portable\WardogsTool.exe（自包含单文件 self-contained single file，约 59 MB）
+publish-slim.cmd  # → dist\WardogsTool-slim\WardogsTool.exe（依赖框架 framework-dependent，约 0.3 MB，需要 .NET 10 Desktop Runtime x64）
 ```
 
 `WardogsTool.exe --test` 运行迫击炮自检（退出码 0 = 通过）。

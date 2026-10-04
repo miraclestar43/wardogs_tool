@@ -6,23 +6,24 @@ Run these with the published `dist\WardogsTool-portable\WardogsTool.exe`, WARDOG
 
 - [ ] **(in game)** F9 starts hammering while WARDOGS is focused; the badge turns green RUNNING.
 - [ ] **(in game)** A second F9 while running does nothing.
-- [ ] **(in game)** Esc stops it — and the game still reacts to that Esc.
 - [ ] **(in game)** 310 ms builds with the small/medium hammer, 510 ms with the large hammer, at the same rate as the Python tool on the same structure.
 - [ ] **(in game)** Same rate with the tool window behind the game or minimized.
-- [ ] **(in game)** Stopping in the middle of a 510 ms hold releases the button at once (you can look/click normally).
-- [ ] **(in game)** F12 and closing the window mid-hold: no mouse button stays stuck.
 
 ## Anti-AFK · 防挂机
 
 - [ ] **(in game)** F8 starts it (use a short period such as 10 s to watch); the countdown runs.
-- [ ] **(in game)** Every generated key-down gets its key-up; no key stays stuck after stopping.
-- [ ] Stop button / Esc stop it.
+- [ ] **(in game)** Every generated key-down gets its key-up; no key stays stuck.
 
-## Simultaneous operation · 同时运行
+## Stop: Esc, Stop buttons, F12 · 停止
 
-- [ ] **(in game)** Hammer + anti-AFK run together; hammering continues while the key fires.
-- [ ] The Hammer tab's 停止敲锤 stops only hammering; the Anti-AFK tab's 停止防挂机 stops only anti-AFK.
-- [ ] Esc stops both.
+Every Stop is a global stop. Start hammer (F9), anti-AFK (F8) and the magnifier (F10) together, then:
+
+- [ ] **(in game)** **Esc** — hammering stops, anti-AFK stops, the lens disappears, no mouse button or key stays held, **the tool stays open**, and the game still reacts to that Esc (not swallowed).
+- [ ] **(in game)** Esc in the middle of a 510 ms hold releases the button at once (you can look/click normally).
+- [ ] The Hammer tab's **停止 STOP** button does exactly the same as Esc (everything stops, lens hidden).
+- [ ] The Anti-AFK tab's **停止 STOP** button does exactly the same as Esc.
+- [ ] After any stop the status line reads `已停止   F9 敲锤 | F8 防挂机 | F10 放大镜 | Esc 全部停止 | F12 退出`.
+- [ ] **(in game)** **F12** — the same cleanup, then the tool exits; no lens, no stuck button. Closing the window with ✕ behaves the same.
 
 ## Hotkeys · 快捷键
 
@@ -46,17 +47,18 @@ Enter the same values in `python wardogs_tool.py` and `WardogsTool.exe`:
 
 ## Magnifier · 放大镜
 
-- [ ] **(in game)** F10 toggles the lens while WARDOGS is focused, and the game still receives F10.
-- [ ] **(in game)** The centre of the screen is magnified (the lens shows the game, not a black or frozen image).
-- [ ] **(in game)** Each zoom (1.5x–4.0x) looks right; the choice is remembered after restart.
+- [ ] **(in game)** Each F10 press advances exactly one step: **OFF → 2.0x → 3.0x → 4.0x → OFF → 2.0x …**; the game still receives F10.
+- [ ] **(in game)** The centre of the screen is magnified (the lens shows the live game, not a black or frozen image).
+- [ ] The Magnifier tab's list + 开 / 关 ON / OFF button shows 1.5x and 2.5x; F10 from 2.5x goes to 3.0x.
 - [ ] **(in game)** The lens is click-through and never takes focus: shooting/aiming through it works, the game keeps keyboard input.
+- [ ] **(in game)** The lens stays above the game after clicking into the game.
 - [ ] No recursive "mirror" effect inside the lens.
 - [ ] **(in game)** The game stays responsive with the lens on (no stutter or noticeable input lag).
-- [ ] F10 again removes it immediately; quitting the tool (F12 / ✕) removes it too.
 - [ ] Multi-monitor: the lens appears on the monitor the game is on.
 
-## Window · 窗口
+## Window and builds · 窗口与版本
 
 - [ ] Settings tab → 窗口置顶 / Always on top keeps the tool above the game; unticking lets the game cover it.
 - [ ] Restart: always-on-top, window position, tab, hammer preset, anti-AFK values, mortar position and zoom are remembered.
-- [ ] Copy `WardogsTool.exe` to a machine without Python/.NET: it starts by double-click, no console window, **no administrator prompt**.
+- [ ] Portable `dist\WardogsTool-portable\WardogsTool.exe` on a machine without Python/.NET: starts by double-click, no console window, **no administrator prompt**.
+- [ ] Slim `dist\WardogsTool-slim\WardogsTool.exe`: starts where the **.NET 10 Desktop Runtime (x64)** is installed; where it is not, Windows shows its "install .NET" prompt (the app does not start).

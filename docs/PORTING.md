@@ -52,11 +52,21 @@ Each **F10** press advances one step: **OFF → 2.0x → 3.0x → 4.0x → OFF**
 - If the game runs elevated, the tool must run elevated too (UIPI blocks lower-integrity input).
 - Anti-AFK with a period that truncates to 0 ms and a valid round (e.g. count 1, period `0.0004`) passes Python's validation and floods key presses with no wait. The port keeps that validation for parity; tightening it is a candidate follow-up.
 
+## .NET Framework 4.8 runtime notes
+
+The tests run on the .NET Framework runtime, and found three ways it differs from .NET Core / CPython. All three are handled so the results match Python:
+
+- `double.Parse` **throws** on overflow (`1e400`); the port returns ±inf like CPython's `float()`.
+- `double.Parse("-0")` / `"-0.0"` returns **+0**; the port restores the sign, as CPython keeps it.
+- `(-0.0).ToString()` prints `"0"`; the history line prints `-0` like Python.
+
+**Parity guarantee scope for number parsing.** .NET Framework's parser is not always correctly rounded for long inputs. Measured against Python's `float()` on 200,000 strings: two-decimal coordinates (the in-game format, e.g. `104.39`) **0 / 50,000** differ; six-decimal values 28 / 50,000, 17-digit values 8 / 50,000 and values with large exponents 487 / 50,000 differ by one unit in the last place. Such a difference could only change a displayed mortar result at an exact rounding tie. Extreme long or exponent inputs are therefore outside the parity guarantee; normal short decimal coordinates are inside it. No custom parser is used.
+
 ## Validation
 
 ### Unit tests — `test.cmd`
 
-162 tests. Highlights:
+165 tests, run on the .NET Framework 4.8 runtime itself (`test.cmd`), so its number parsing and formatting are what is tested. Highlights:
 
 - `PythonParityTests`: 4148 mortar cases (three known in-game cases, all eight compass directions, the 359.5/0.5 boundaries, tiny negative angles, 3000 random two-decimal and 1000 full-precision cases), 58 `parse_xy` inputs (incl. `repr()` escaping and astral Unicode digits) and 34 `read_afk_settings` inputs, all recorded from the unmodified Python by `tools/parity/gen_python_reference.py`. Every number, display string and error message matches, except the six intended rejections listed above (one huge range, five anti-AFK inputs), which the test asserts explicitly.
 - `HammerEngineTests` / `AntiAfkEngineTests`: exact event sequences against a fake clock — immediate first down, relative deadlines with no catch-up (7 ms input latency shifts every later deadline), stop during hold / gap, overlapping anti-AFK presses when gap < 50 ms, key-up after stop, exceptions still releasing.
@@ -76,10 +86,10 @@ python tools\parity\gen_python_reference.py
 ```powershell
 publish.cmd
 tools\WardogsTool.InputProbe\bin\Release\net10.0-windows\WardogsTool.InputProbe.exe ^
-  --exe dist\WardogsTool-portable\WardogsTool.exe --python <path to python.exe> --out docs\validation
+  --exe dist\WardogsTool\WardogsTool.exe --python <path to python.exe> --out docs\validation
 ```
 
-Latest run: [validation/input-probe-report.md](validation/input-probe-report.md) — 24/24 scenarios pass. C#-only scenarios include **Esc as global stop** (with hammer, anti-AFK and the lens all on: nothing sent after Esc + 120 ms, every down has its up, no button/key held, lens hidden, app still running, Esc and F10 not swallowed, status back to idle; then F12 releases the held button, removes the lens and exits) and the **magnifier** (lens 600×400 centred on the 2560×1440 monitor, styles correct, click-through, focus kept; 12 px test stripes shown at exactly 24 / 36 / 48 px for the F10 steps 2.0x / 3.0x / 4.0x, then gone within 150 ms; 2.5x from the UI = 30 px, F10 from there = 36 px; no recursion; ≤ 0.4 % CPU; removed on exit). Mouse events (`LBUTTONDOWN/UP flags=0x1 mouseData=0 extra=0`) and anti-AFK key events (`vk=0x43 scan=0x2E flags=0x10/0x90`) are field-for-field identical between Python and C#. Holds measure 310.8 vs 310.7 ms and 510.7 vs 510.9 ms, gaps 42.1 vs 40.7 ms; with the tool window minimized 310.7 vs 310.7 ms and 40.7 vs 40.7 ms.
+Latest run: [validation/input-probe-report.md](validation/input-probe-report.md) — 24/24 scenarios pass. C#-only scenarios include **Esc as global stop** (with hammer, anti-AFK and the lens all on: nothing sent after Esc + 120 ms, every down has its up, no button/key held, lens hidden, app still running, Esc and F10 not swallowed, status back to idle; then F12 releases the held button, removes the lens and exits) and the **magnifier** (lens 600×400 centred on the 2560×1440 monitor, styles correct, click-through, focus kept; 12 px test stripes shown at exactly 24 / 36 / 48 px for the F10 steps 2.0x / 3.0x / 4.0x, then gone within 150 ms; 2.5x from the UI = 30 px, F10 from there = 36 px; no recursion; ≤ 0.4 % CPU; removed on exit). Mouse events (`LBUTTONDOWN/UP flags=0x1 mouseData=0 extra=0`) and anti-AFK key events (`vk=0x43 scan=0x2E flags=0x10/0x90`) are field-for-field identical between Python and C#. Holds measure 310.7 vs 310.8 ms and 510.7 vs 510.7 ms, gaps 40.9 vs 41.0 ms; with the tool window minimized 310.6 vs 310.7 ms and 40.7 vs 40.7 ms (Python vs the .NET Framework 4.8 build).
 
 Run-to-run variation: both tools occasionally stretch a single 40 ms gap to ~46–48 ms (Windows thread scheduling); means stay within 1–2 ms of nominal. The probe fails a target whose mean drifts more than 3 ms — one earlier run failed on the **Python** side for exactly this (510 ms scenario, gap mean 43.1 ms, max 48.2 ms; C# 41.1 / 42.1 ms in the same run); the rerun that produced the committed report passed 24/24.
 
@@ -87,9 +97,8 @@ What the probe cannot prove: that WARDOGS itself accepts this input. It shows th
 
 ## Distribution
 
-| Script | Output | Size (this build) | Needs on the target machine |
+| Script | Output | Size | Needs on the target machine |
 |---|---|---|---|
-| `publish.cmd` | `dist\WardogsTool-portable\WardogsTool.exe` — self-contained single file | 61,709,664 bytes (58.9 MiB) | nothing |
-| `publish-slim.cmd` | `dist\WardogsTool-slim\WardogsTool.exe` — framework-dependent single file | 295,539 bytes (0.28 MiB) | **.NET 10 Desktop Runtime (x64)** |
+| `publish.cmd` | `dist\WardogsTool\`: `WardogsTool.exe` (50,688 B), `WardogsTool.Core.dll` (46,592 B), `WardogsTool.exe.config` (174 B) | 97,454 bytes | nothing on Windows 10 1903+ (64-bit) and Windows 11 |
 
-The portable size is the bundled .NET Desktop runtime (WPF cannot be trimmed); it is expected and not worth rewriting the app for. Without the runtime, the slim EXE does not start: Windows shows its "install .NET" prompt instead. Verified here: the slim EXE passes `--test` when pointed at the .NET 10 Desktop Runtime 10.0.12 in `C:\dotnet10`.
+The app targets .NET Framework 4.8, which is part of Windows 10 1903+ and Windows 11 (11 ships 4.8.1). The three files must stay together; no ILMerge/Costura-style bundling is used. The settings use the built-in `DataContractJsonSerializer`, so no NuGet assemblies ship. Startup on this machine: ~250 ms to the main window (the earlier .NET 10 self-contained single-file build: ~625 ms, 58.9 MiB).

@@ -1,6 +1,6 @@
 # Manual acceptance checklist · 手动验收清单
 
-Run these with the published `dist\WardogsTool-portable\WardogsTool.exe`, WARDOGS in **borderless windowed** mode, the tool started normally (not as administrator unless the game is). Items marked **(in game)** can only be checked inside WARDOGS; the others are also covered by the automated probe ([validation/input-probe-report.md](validation/input-probe-report.md)) but worth a quick look on your own setup.
+Run these with the published `dist\WardogsTool\WardogsTool.exe` (keep its three files together), WARDOGS in **borderless windowed** mode, the tool started normally (not as administrator unless the game is). Items marked **(in game)** can only be checked inside WARDOGS; the others are also covered by the automated probe ([validation/input-probe-report.md](validation/input-probe-report.md)) but worth a quick look on your own setup.
 
 ## Hammer · 敲锤
 
@@ -60,5 +60,4 @@ Enter the same values in `python wardogs_tool.py` and `WardogsTool.exe`:
 
 - [ ] Settings tab → 窗口置顶 / Always on top keeps the tool above the game; unticking lets the game cover it.
 - [ ] Restart: always-on-top, window position, tab, hammer preset, anti-AFK values, mortar position and zoom are remembered.
-- [ ] Portable `dist\WardogsTool-portable\WardogsTool.exe` on a machine without Python/.NET: starts by double-click, no console window, **no administrator prompt**.
-- [ ] Slim `dist\WardogsTool-slim\WardogsTool.exe`: starts where the **.NET 10 Desktop Runtime (x64)** is installed; where it is not, Windows shows its "install .NET" prompt (the app does not start).
+- [ ] Copy the `dist\WardogsTool\` folder to a clean Windows 10 1903+ (64-bit) or Windows 11 machine with no Python and no .NET installed by hand: `WardogsTool.exe` starts by double-click, no console window, **no administrator prompt**, no "install .NET" prompt.

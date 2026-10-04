@@ -3,9 +3,9 @@
 **战狗（WARDOGS）土木、建造辅助：快速敲锤，附带防挂机、迫击炮计算和屏幕中心放大镜。**
 **Fast hammering for building in WARDOGS, plus anti-AFK, a mortar calculator and a centre-screen magnifier.**
 
-做工兵、修建工事、盖建筑时不用再狂点鼠标：按 **F9** 自动敲锤（速敲 / 光速敲锤），小锤、中锤、大锤各有合适的按住时长。单个 `WardogsTool.exe`，双击即用，不需要安装 Python 或 .NET，不需要管理员权限。
+做工兵、修建工事、盖建筑时不用再狂点鼠标：按 **F9** 自动敲锤（速敲 / 光速敲锤），小锤、中锤、大锤各有合适的按住时长。整个程序不到 100 KB，双击 `WardogsTool.exe` 即用：Windows 10 1903 及以上 / Windows 11 自带所需的运行环境，不需要另外安装 Python 或 .NET，不需要管理员权限。
 
-WardogsTool takes the clicking out of construction: press **F9** and it hammers for you, with the right hold time for small, medium and large hammers. One `WardogsTool.exe` — no Python, no .NET install, no administrator rights.
+WardogsTool takes the clicking out of construction: press **F9** and it hammers for you, with the right hold time for small, medium and large hammers. The whole tool is under 100 KB; double-click `WardogsTool.exe`. Windows 10 1903+ and Windows 11 already include what it needs — no Python, no separate .NET install, no administrator rights.
 
 | 功能 Feature | 快捷键 Hotkey |
 |---|---|
@@ -88,18 +88,23 @@ It uses the documented Windows Magnification API and only enlarges pixels alread
 
 ## 下载与运行 · Download & run
 
-Windows 10/11 x64。有两种版本（用下面「构建」一节生成）：
+**系统要求 Requirements：Windows 10 1903 或更新版本（64 位），或 Windows 11。**
+**Windows 10 version 1903 or later (64-bit), or Windows 11.**
 
-| 版本 Build | 大小 Size | 需要安装 Needs installed |
-|---|---|---|
-| `dist\WardogsTool-portable\WardogsTool.exe`（推荐 recommended） | 约 59 MB | 什么都不需要 nothing |
-| `dist\WardogsTool-slim\WardogsTool.exe` | 约 0.3 MB | **.NET 10 Desktop Runtime (x64)** |
+程序基于 .NET Framework 4.8，它已经内置在 Windows 10 1903+ 和 Windows 11 中（Windows 11 自带 4.8.1），**不需要另外安装任何 .NET 运行库**。
+WardogsTool runs on .NET Framework 4.8, which is built into Windows 10 1903+ and Windows 11 (Windows 11 ships 4.8.1) — **no separate .NET runtime installation is needed.**
 
-便携版自带 .NET 运行库，所以体积大；精简版小，但电脑上必须先安装 [.NET 10 Desktop Runtime x64](https://dotnet.microsoft.com/download/dotnet/10.0)，否则 Windows 会提示先安装 .NET，程序不会启动。
-The portable build bundles the .NET runtime, hence its size. The slim build is tiny but requires the **.NET 10 Desktop Runtime (x64)**; without it Windows asks you to install .NET instead of starting the app.
+用下面「构建」一节生成 `dist\WardogsTool\`，里面三个文件要放在一起（可以打包成 zip 分发），双击 `WardogsTool.exe` 运行：
+Build `dist\WardogsTool\` (see Build below); keep its three files together (e.g. zipped) and double-click `WardogsTool.exe`:
 
-设置（档位、防挂机参数、炮位、放大倍率、窗口置顶、窗口位置）保存在 `%AppData%\WardogsTool\settings.json`。
-Settings are saved to `%AppData%\WardogsTool\settings.json`.
+| 文件 File | 大小 Size |
+|---|---|
+| `WardogsTool.exe` | 约 50 KB |
+| `WardogsTool.Core.dll` | 约 46 KB |
+| `WardogsTool.exe.config` | < 1 KB |
+
+设置（档位、防挂机参数、炮位、放大倍率、窗口置顶、窗口位置）保存在 `%AppData%\WardogsTool\settings.json`，格式版本 `schemaVersion` 为 **2**（旧的版本 1 文件会自动读取，放大倍率取默认 2.0x）；文件损坏时使用默认设置并把原文件备份为 `settings.json.bad`。
+Settings are saved to `%AppData%\WardogsTool\settings.json`, schema version **2** (version-1 files still load, with the default 2.0x zoom). A corrupt file falls back to defaults and is kept as `settings.json.bad`.
 
 - 在「设置」页勾选「窗口置顶」可以让工具浮在游戏上面。Tick **Always on top** on the Settings tab to keep the tool above the game.
 - 游戏以管理员身份运行时，工具也要以管理员身份运行，否则按键和点击会被 Windows 拦截。If the game runs as administrator, run the tool as administrator too.
@@ -129,17 +134,16 @@ WardogsTool is an independent implementation. MortarHUD was consulted only as a 
 
 ## 构建 · Build
 
-需要 .NET 10 SDK。脚本固定使用 `C:\dotnet10\dotnet.exe`（可用环境变量 `WARDOGS_DOTNET` 指定其他路径），找不到就报错，不会退回到系统里没有 SDK 的 `dotnet`。
-Requires the .NET 10 SDK; the scripts use `C:\dotnet10\dotnet.exe` (or `WARDOGS_DOTNET`) and stop if it is missing.
+只有开发者构建时才需要 .NET SDK（这里用 10.0 版 SDK 编译 .NET Framework 4.8 程序；用户运行时不需要）。脚本固定使用 `C:\dotnet10\dotnet.exe`（可用环境变量 `WARDOGS_DOTNET` 指定其他路径），找不到就报错。
+Only building needs a .NET SDK (the 10.0 SDK is used here to compile the .NET Framework 4.8 app; users do not need it). The scripts use `C:\dotnet10\dotnet.exe` (or `WARDOGS_DOTNET`) and stop if it is missing.
 
 ```powershell
 # 一次性：用户目录安装 SDK（不需要管理员） one-time, no admin
 powershell -ExecutionPolicy Bypass -File dotnet-install.ps1 -Channel 10.0 -InstallDir C:\dotnet10 -NoPath
 
 build.cmd      # Release 构建
-test.cmd       # 单元测试 unit tests
-publish.cmd       # → dist\WardogsTool-portable\WardogsTool.exe（自包含单文件 self-contained single file，约 59 MB）
-publish-slim.cmd  # → dist\WardogsTool-slim\WardogsTool.exe（依赖框架 framework-dependent，约 0.3 MB，需要 .NET 10 Desktop Runtime x64）
+test.cmd       # 单元测试（在 .NET Framework 4.8 上运行） unit tests, run on .NET Framework 4.8
+publish.cmd    # → dist\WardogsTool\：WardogsTool.exe + WardogsTool.Core.dll + WardogsTool.exe.config（约 97 KB）
 ```
 
 `WardogsTool.exe --test` 运行迫击炮自检（退出码 0 = 通过）。

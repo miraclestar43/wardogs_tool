@@ -66,7 +66,7 @@ internal sealed class CSharpTarget(string exe) : ITarget
         Directory.CreateDirectory(SettingsDir);
         var json = new JsonObject
         {
-            ["schemaVersion"] = 1,
+            ["schemaVersion"] = 2,
             ["hammer"] = new JsonObject { ["holdMs"] = s.HoldMs },
             ["antiAfk"] = new JsonObject { ["key"] = s.Key, ["count"] = s.Count, ["gapMs"] = s.GapMs, ["periodSeconds"] = s.PeriodSeconds },
             ["mortar"] = new JsonObject { ["position"] = mortarPosition },

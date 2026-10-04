@@ -5,7 +5,7 @@ using System.Windows.Automation;
 namespace WardogsTool.InputProbe;
 
 /// <summary>
-/// C#-only: per-feature stop buttons, and the F10 centre-screen magnifier.
+/// C#-only: Esc / F12 as global stop, and the F10 centre-screen magnifier.
 /// </summary>
 internal static class MagnifierScenarios
 {
@@ -45,52 +45,72 @@ internal static class MagnifierScenarios
         ((InvokePattern)button.GetCurrentPattern(InvokePattern.Pattern)).Invoke();
     }
 
-    /// <summary>Each tab's stop button stops only its own feature.</summary>
-    public static ScenarioResult PerFeatureStop(Probe p, string exe)
+
+    private static bool KeyDownNow(int vk) => (Native.GetAsyncKeyState(vk) & 0x8000) != 0;
+
+    /// <summary>
+    /// Esc with hammer, anti-AFK and the lens all on: everything stops, everything held is released,
+    /// the lens is hidden, the app keeps running. Then F12: the same cleanup, then exit.
+    /// </summary>
+    public static ScenarioResult EscGlobalStop(Probe p, string exe)
     {
-        var r = new ScenarioResult("C#", "Stopping one feature leaves the other running");
+        var r = new ScenarioResult("C#", "Esc = global stop (hammer + anti-AFK + magnifier), F12 = same + exit");
         var proc = new CSharpTarget(exe).Launch(new TargetSettings(PeriodSeconds: "1.5", GapMs: "300"));
         try
         {
             if (!Probe.WaitForWindow(proc, 15000)) throw new AbortException("C# window did not appear");
             p.Sleep(1000);
-            var root = AutomationElement.FromHandle(proc.MainWindowHandle);
 
-            // Hammer stop button while both run: anti-AFK must keep pressing.
             p.Activate();
-            p.KeyTap(Probe.VkF8);
+            var t0 = p.KeyTap(Probe.VkF8);
             p.KeyTap(Probe.VkF9);
-            p.Sleep(400);
-            SelectTab(root, "Hammer");
-            var tStopHammer = Recorder.Now;
-            Invoke(root, "停止敲锤");
-            p.Sleep(2600);
-            var mouseAfter = p.AppMouse(tStopHammer + Probe.Ms(150)).Count(e => e.IsLeftDown);
-            var keysAfter = p.AppKeys(tStopHammer, Probe.VkC).Count(e => e.IsKeyDown);
-            r.Metric("after 停止敲锤: mouse downs / anti-AFK presses", $"{mouseAfter} / {keysAfter}");
-            r.Expect(mouseAfter == 0, "hammer kept clicking after its stop button");
-            r.Expect(keysAfter >= 1, "anti-AFK stopped too");
-            r.Expect(!Probe.LeftButtonDown(), "left button down after hammer stop");
+            p.KeyTap(0x79);
+            var c = p.WaitFor(e => e.FromApp && e.IsKeyDown && e.Vk == Probe.VkC, t0, 4000);
+            var host = Native.FindWindowW(HostClass, null);
+            r.Expect(c is not null, "anti-AFK did not press while hammering");
+            r.Expect(host != 0 && Native.IsWindowVisible(host), "F10 did not show the lens");
+            var d = p.WaitFor(e => e.FromApp && e.IsLeftDown, Recorder.Now, 2000);
+            if (d is not null) p.SleepUntil(d.Value.Ticks + Probe.Ms(100)); // Esc lands mid-hold
 
-            // Anti-AFK stop button while both run: hammering must continue.
-            p.Activate();
-            p.KeyTap(Probe.VkF9);
-            p.Sleep(300);
-            SelectTab(root, "Anti-AFK");
-            var tStopAfk = Recorder.Now;
-            Invoke(root, "停止防挂机");
-            p.Sleep(2600);
-            var keysAfterAfk = p.AppKeys(tStopAfk + Probe.Ms(80), Probe.VkC).Count(e => e.IsKeyDown);
-            var mouseAfterAfk = p.AppMouse(tStopAfk).Count(e => e.IsLeftDown);
-            r.Metric("after 停止防挂机: anti-AFK presses / mouse downs", $"{keysAfterAfk} / {mouseAfterAfk}");
-            r.Expect(keysAfterAfk == 0, "anti-AFK kept pressing after its stop button");
-            r.Expect(mouseAfterAfk >= 4, "hammer stopped too");
-            var keys = p.AppKeys(tStopHammer, Probe.VkC);
+            var tEsc = p.KeyTap(Probe.VkEsc);
+            p.Sleep(800);
+            var mouse = p.AppMouse(t0);
+            var keys = p.AppKeys(t0, Probe.VkC);
+            var late = mouse.Concat(keys).Where(e => e.Ticks > tEsc + Probe.Ms(120)).ToList();
+            r.Metric("before Esc: mouse downs / anti-AFK presses", $"{mouse.Count(e => e.IsLeftDown && e.Ticks < tEsc)} / {keys.Count(e => e.IsKeyDown && e.Ticks < tEsc)}");
+            r.Metric("events later than Esc + 120 ms", late.Count);
+            r.Metric("lens visible after Esc", host != 0 && Native.IsWindowVisible(host));
+            r.Metric("app still running after Esc", !proc.HasExited);
+            r.Expect(late.Count == 0, "something was still sent after Esc");
+            r.Expect(mouse.Count(e => e.IsLeftDown) == mouse.Count(e => e.IsLeftUp), "a mouse-down has no mouse-up");
             r.Expect(keys.Count(e => e.IsKeyDown) == keys.Count(e => e.IsKeyUp), "an anti-AFK key-down has no key-up");
+            r.Expect(!Probe.LeftButtonDown() && !KeyDownNow(Probe.VkC), "a button or key is still held after Esc");
+            r.Expect(host == 0 || !Native.IsWindowVisible(host), "Esc did not hide the lens");
+            r.Expect(!proc.HasExited, "Esc closed the app");
+            r.Expect(p.KeyReachedWindow(Probe.VkEsc, tEsc), "Esc did not reach the focused window (swallowed?)");
+            r.Expect(p.KeyReachedWindow(0x79, t0), "F10 did not reach the focused window (swallowed?)");
+            var root = AutomationElement.FromHandle(AppWindow());
+            var status = Find(root, ControlType.Text, e => e.Current.Name.StartsWith("已停止") || e.Current.Name.StartsWith("运行中"));
+            r.Metric("status line after Esc", status?.Current.Name ?? "?");
+            r.Expect(status?.Current.Name.StartsWith("已停止") == true, "status does not show everything stopped");
 
-            p.KeyTap(Probe.VkEsc);
-            p.Sleep(500);
-            r.Expect(!Probe.LeftButtonDown(), "left button down at the end");
+            // F12: the same cleanup, then exit.
+            p.Activate();
+            var t1 = p.KeyTap(Probe.VkF9);
+            p.KeyTap(0x79);
+            p.Sleep(700);
+            d = p.WaitFor(e => e.FromApp && e.IsLeftDown, Recorder.Now, 2000);
+            if (d is not null) p.SleepUntil(d.Value.Ticks + Probe.Ms(100));
+            var tF12 = p.KeyTap(Probe.VkF12);
+            var exited = proc.WaitForExit(4000);
+            p.Sleep(300);
+            var mouse2 = p.AppMouse(t1);
+            r.Metric("F12: exited / lens window after exit", $"{exited} / {(Native.FindWindowW(HostClass, null) == 0 ? "gone" : "STILL THERE")}");
+            r.Expect(exited, "F12 did not exit");
+            r.Expect(mouse2.Count > 0 && mouse2[^1].IsLeftUp && mouse2[^1].Ticks > tF12, "F12 did not release the held button");
+            r.Expect(mouse2.Count(e => e.IsLeftDown) == mouse2.Count(e => e.IsLeftUp), "a mouse-down has no mouse-up after F12");
+            r.Expect(Native.FindWindowW(HostClass, null) == 0, "lens left behind after F12");
+            r.Expect(!Probe.LeftButtonDown(), "left button still down after F12");
         }
         finally
         {
@@ -119,10 +139,21 @@ internal static class MagnifierScenarios
 
     private static string F(double v) => v.ToString("0.0", CultureInfo.InvariantCulture);
 
+
+    private static double Stripes(Native.POINT centre, int rowX, int rowWidth) =>
+        Median(Runs(Native.CaptureRow(rowX, centre.Y, rowWidth)));
+
+    private static void ExpectZoom(ScenarioResult r, string label, double measured, double baseline, double zoom)
+    {
+        r.Metric($"stripe width {label} px", F(measured));
+        r.Expect(Math.Abs(measured - zoom * baseline) <= 4, $"{label}: expected ~{F(zoom * baseline)} px");
+    }
+
+
     /// <summary>The magnifier on the probe window's stripe pattern.</summary>
     public static ScenarioResult Magnifier(Probe p, string exe, Native.POINT centre, Action<bool> showStripes, Func<int> clicksAtWindow)
     {
-        var r = new ScenarioResult("C#", "Magnifier (F10): centred, click-through, no focus steal, no recursion");
+        var r = new ScenarioResult("C#", "Magnifier: F10 cycle OFF→2x→3x→4x→OFF, centred, click-through, no focus steal, no recursion");
         showStripes(true);
         var proc = new CSharpTarget(exe).Launch(new TargetSettings());
         try
@@ -186,43 +217,52 @@ internal static class MagnifierScenarios
             r.Metric("WardogsTool CPU with lens on (% of machine)", (cpu * 100).ToString("0.00", CultureInfo.InvariantCulture));
             r.Expect(cpu < 0.05, "lens uses too much CPU");
 
-            // Zoom 4.0x through the UI.
+            // F10 cycle: OFF → 2.0x (above) → 3.0x → 4.0x → OFF, one step per press.
+            p.Activate();
+            p.KeyTap(0x79);
+            p.Sleep(400);
+            ExpectZoom(r, "after 2nd F10 (3.0x)", Stripes(centre, rowX, rowWidth), baseline, 3.0);
+            p.KeyTap(0x79);
+            p.Sleep(400);
+            ExpectZoom(r, "after 3rd F10 (4.0x)", Stripes(centre, rowX, rowWidth), baseline, 4.0);
+            p.KeyTap(0x79);
+            p.Sleep(150);
+            r.Metric("lens visible 150 ms after 4th F10", Native.IsWindowVisible(host));
+            r.Expect(!Native.IsWindowVisible(host), "4th F10 did not turn the lens off immediately");
+            r.Expect(Math.Abs(Stripes(centre, rowX, rowWidth) - baseline) <= 2, "screen still magnified after turning it off");
+
+            // UI-only 2.5x via the list and the on/off button; F10 then goes to the next step, 3.0x.
             var root = AutomationElement.FromHandle(AppWindow());
-            var tab = Find(root, ControlType.TabItem, e => e.Current.Name.Contains("Magnifier"))!;
-            ((SelectionItemPattern)tab.GetCurrentPattern(SelectionItemPattern.Pattern)).Select();
-            p.Sleep(300);
+            SelectTab(root, "Magnifier");
             var combo = Find(root, ControlType.ComboBox, e => e.Current.AutomationId == "ZoomBox")!;
             ((ExpandCollapsePattern)combo.GetCurrentPattern(ExpandCollapsePattern.Pattern)).Expand();
             p.Sleep(300);
             var items = combo.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.ListItem))
                 .Cast<AutomationElement>().ToList();
             r.Metric("zoom items", string.Join(", ", items.Select(i => i.Current.Name)));
-            var item = items.FirstOrDefault(i => i.Current.Name.StartsWith("4"));
-            r.Expect(item is not null, "4.0x not found in the zoom list");
+            var item = items.FirstOrDefault(i => i.Current.Name.StartsWith("2.5"));
+            r.Expect(item is not null, "2.5x not found in the zoom list");
             if (item is null) return r;
             ((SelectionItemPattern)item.GetCurrentPattern(SelectionItemPattern.Pattern)).Select();
             ((ExpandCollapsePattern)combo.GetCurrentPattern(ExpandCollapsePattern.Pattern)).Collapse();
+            p.Sleep(200);
+            Invoke(root, "ON / OFF");
             p.Sleep(400);
-            var zoom4 = Median(Runs(Native.CaptureRow(rowX, centre.Y, rowWidth)));
-            r.Metric("stripe width with lens at 4.0x px", F(zoom4));
-            r.Expect(Math.Abs(zoom4 - 4 * baseline) <= 4, "4.0x zoom is not applied");
+            ExpectZoom(r, "UI 2.5x", Stripes(centre, rowX, rowWidth), baseline, 2.5);
             var status = Find(root, ControlType.Text, e => e.Current.Name.StartsWith("Magnifier:"));
-            r.Metric("status line", status?.Current.Name ?? "?");
-
-            // F10 again: gone at once.
+            r.Metric("magnifier status", status?.Current.Name ?? "?");
             p.Activate();
-            var tOff = Recorder.Now;
-            p.KeyTap(0x79);
-            p.Sleep(150);
-            r.Metric("lens visible 150 ms after F10", Native.IsWindowVisible(host));
-            r.Expect(!Native.IsWindowVisible(host), "F10 did not remove the lens immediately");
-            var after = Median(Runs(Native.CaptureRow(rowX, centre.Y, rowWidth)));
-            r.Expect(Math.Abs(after - baseline) <= 2, "screen still magnified after turning it off");
-
-            // On again, then quit: the window must go away with the app.
             p.KeyTap(0x79);
             p.Sleep(400);
-            r.Expect(Native.IsWindowVisible(Native.FindWindowW(HostClass, null)), "lens did not come back on");
+            ExpectZoom(r, "F10 from 2.5x (3.0x)", Stripes(centre, rowX, rowWidth), baseline, 3.0);
+            r.Metric("lens visible after F10 from 2.5x", Native.IsWindowVisible(host));
+            foreach (AutomationElement w in AutomationElement.RootElement.FindAll(TreeScope.Children,
+                         new PropertyCondition(AutomationElement.ProcessIdProperty, proc.Id)))
+                if (w.Current.ClassName == "#32770")
+                    r.Metric("dialog", string.Join(" / ", w.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Text))
+                        .Cast<AutomationElement>().Select(e => e.Current.Name)));
+
+            // Quit with the lens on: the window must go away with the app.
             Native.PostMessageW(AppWindow(), 0x0010 /* WM_CLOSE */, 0, 0);
             r.Expect(proc.WaitForExit(4000), "app did not exit");
             p.Sleep(300);
@@ -231,7 +271,7 @@ internal static class MagnifierScenarios
 
             var saved = CSharpTarget.ReadSettings();
             r.Metric("saved zoom", saved?["magnifier"]?["zoom"]?.ToString() ?? "?");
-            r.Expect(saved?["magnifier"]?["zoom"]?.GetValue<double>() == 4.0, "zoom was not saved");
+            r.Expect(saved?["magnifier"]?["zoom"]?.GetValue<double>() == 3.0, "zoom was not saved");
         }
         finally
         {

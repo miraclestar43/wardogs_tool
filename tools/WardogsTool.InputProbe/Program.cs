@@ -104,7 +104,7 @@ internal static class Program
                     {
                         results.AddRange(Scenarios.RunInputSuite(probe, new CSharpTarget(exe)));
                         results.AddRange(UiScenarios.Run(probe, exe));
-                        results.Add(MagnifierScenarios.PerFeatureStop(probe, exe));
+                        results.Add(MagnifierScenarios.EscGlobalStop(probe, exe));
                     }
                     if (only is "all" or "csharp" or "magnifier")
                         results.Add(MagnifierScenarios.Magnifier(probe, exe, centre, ShowStripes, ClicksAtWindow));

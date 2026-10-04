@@ -8,7 +8,7 @@
 
 WardogsTool takes the clicking out of construction: press **F9** and it hammers for you, with the right hold time for small, medium and large hammers. The whole tool is under 100 KB; double-click `WardogsTool.exe`. Windows 10 1903+ and Windows 11 already include what it needs — no Python, no separate .NET install, no administrator rights.
 
-下载链接download：https://github.com/miraclestar43/wardogs_tool/releases/tag/v0.1.0
+下载链接download：https://github.com/miraclestar43/wardogs_tool/releases/latest
 
 **关键词 Keywords：** 战狗 · WARDOGS · 战狗工具 · 土木 · 建造 · 工兵 · 修建 · 敲锤 · 快速敲锤 · 自动敲锤 · 速敲 · 光速敲锤 · 大锤 · 中锤 · 小锤 · 迫击炮 · 迫击炮计算 · 迫击炮计算器 · 迫击炮方向 · 迫击炮距离 · 方位角 · 坐标计算 · 放大镜 · 倍镜 · 屏幕放大 · 中心放大 · 防挂机 · fast hammer · auto hammer · mortar calculator · magnifier · zoom · anti-AFK
 

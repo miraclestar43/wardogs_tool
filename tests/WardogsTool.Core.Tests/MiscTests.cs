@@ -132,6 +132,43 @@ public class SettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public void Unknown_members_are_ignored()
+    {
+        var store = new SettingsStore(_dir);
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(store.FilePath, "{\"schemaVersion\":2,\"futureThing\":{\"a\":1},\"hammer\":{\"holdMs\":510,\"extra\":true}}");
+        var (s, warning) = store.Load();
+        Assert.Null(warning);
+        Assert.Equal(510, s.Hammer.HoldMs);
+    }
+
+    [Fact]
+    public void Wrong_value_type_is_treated_as_corrupt()
+    {
+        var store = new SettingsStore(_dir);
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(store.FilePath, "{\"schemaVersion\":2,\"hammer\":{\"holdMs\":\"abc\"}}");
+        var (s, warning) = store.Load();
+        Assert.NotNull(warning);
+        Assert.Equal(310, s.Hammer.HoldMs);
+        Assert.True(File.Exists(store.FilePath + ".bad"));
+    }
+
+    [Fact]
+    public void Partly_present_sections_keep_defaults_for_missing_members()
+    {
+        // The serializer skips constructors; defaults must still apply inside a present section.
+        var store = new SettingsStore(_dir);
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(store.FilePath, "{\"schemaVersion\":2,\"antiAfk\":{\"key\":\"x\"},\"window\":{\"left\":5}}");
+        var (s, _) = store.Load();
+        Assert.Equal(("x", "2", "500", "180"), (s.AntiAfk.Key, s.AntiAfk.Count, s.AntiAfk.GapMs, s.AntiAfk.PeriodSeconds));
+        Assert.Equal(5, s.Window.Left);
+        Assert.Null(s.Window.Top);
+        Assert.Equal(2.0, s.Magnifier.Zoom);
+    }
+
+    [Fact]
     public void Running_state_is_not_persisted()
     {
         var store = new SettingsStore(_dir);

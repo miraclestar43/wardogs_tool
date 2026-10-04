@@ -1,5 +1,6 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
+using System.Text;
 using WardogsTool.Core.AntiAfk;
 using WardogsTool.Core.Hammer;
 using WardogsTool.Core.Magnifier;
@@ -10,47 +11,108 @@ namespace WardogsTool.Core.Settings;
 /// Persisted UI state, %AppData%\WardogsTool\settings.json. The anti-AFK fields are kept as the raw
 /// text the user typed (like the Python entry boxes) and only validated when anti-AFK starts.
 /// </summary>
+/// <remarks>
+/// Serialized with the built-in DataContractJsonSerializer. It creates objects without running
+/// constructors or field initializers, so every class sets its defaults both in its constructor
+/// and in an [OnDeserializing] hook — that is what makes a member missing from the file (e.g. the
+/// whole magnifier section in a version-1 file) come back as its default.
+/// </remarks>
+[DataContract]
 public sealed class AppSettings
 {
     /// <summary>2 added the magnifier section; version-1 files load with the default zoom.</summary>
     public const int CurrentSchemaVersion = 2;
 
-    public int SchemaVersion { get; set; } = CurrentSchemaVersion;
-    public HammerSection Hammer { get; set; } = new();
-    public AntiAfkSection AntiAfk { get; set; } = new();
-    public MortarSection Mortar { get; set; } = new();
-    public MagnifierSection Magnifier { get; set; } = new();
-    public WindowSection Window { get; set; } = new();
+    public AppSettings() => SetDefaults();
 
+    [DataMember(Name = "schemaVersion", Order = 0)] public int SchemaVersion { get; set; }
+    [DataMember(Name = "hammer", Order = 1)] public HammerSection Hammer { get; set; } = null!;
+    [DataMember(Name = "antiAfk", Order = 2)] public AntiAfkSection AntiAfk { get; set; } = null!;
+    [DataMember(Name = "mortar", Order = 3)] public MortarSection Mortar { get; set; } = null!;
+    [DataMember(Name = "magnifier", Order = 4)] public MagnifierSection Magnifier { get; set; } = null!;
+    [DataMember(Name = "window", Order = 5)] public WindowSection Window { get; set; } = null!;
+
+    [OnDeserializing]
+    private void OnDeserializing(StreamingContext context) => SetDefaults();
+
+    private void SetDefaults()
+    {
+        SchemaVersion = CurrentSchemaVersion;
+        Hammer = new();
+        AntiAfk = new();
+        Mortar = new();
+        Magnifier = new();
+        Window = new();
+    }
+
+    [DataContract]
     public sealed class HammerSection
     {
-        public int HoldMs { get; set; } = HammerPresets.SmallMedium.HoldMs;
+        public HammerSection() => SetDefaults();
+
+        [DataMember(Name = "holdMs")] public int HoldMs { get; set; }
+
+        [OnDeserializing]
+        private void OnDeserializing(StreamingContext context) => SetDefaults();
+
+        private void SetDefaults() => HoldMs = HammerPresets.SmallMedium.HoldMs;
     }
 
+    [DataContract]
     public sealed class AntiAfkSection
     {
-        public string Key { get; set; } = AntiAfkSettings.DefaultKey;
-        public string Count { get; set; } = AntiAfkSettings.DefaultCount;
-        public string GapMs { get; set; } = AntiAfkSettings.DefaultGapMs;
-        public string PeriodSeconds { get; set; } = AntiAfkSettings.DefaultPeriodSeconds;
+        public AntiAfkSection() => SetDefaults();
+
+        [DataMember(Name = "key", Order = 0)] public string Key { get; set; } = null!;
+        [DataMember(Name = "count", Order = 1)] public string Count { get; set; } = null!;
+        [DataMember(Name = "gapMs", Order = 2)] public string GapMs { get; set; } = null!;
+        [DataMember(Name = "periodSeconds", Order = 3)] public string PeriodSeconds { get; set; } = null!;
+
+        [OnDeserializing]
+        private void OnDeserializing(StreamingContext context) => SetDefaults();
+
+        private void SetDefaults()
+        {
+            Key = AntiAfkSettings.DefaultKey;
+            Count = AntiAfkSettings.DefaultCount;
+            GapMs = AntiAfkSettings.DefaultGapMs;
+            PeriodSeconds = AntiAfkSettings.DefaultPeriodSeconds;
+        }
     }
 
+    [DataContract]
     public sealed class MortarSection
     {
-        public string Position { get; set; } = "";
+        public MortarSection() => SetDefaults();
+
+        [DataMember(Name = "position")] public string Position { get; set; } = null!;
+
+        [OnDeserializing]
+        private void OnDeserializing(StreamingContext context) => SetDefaults();
+
+        private void SetDefaults() => Position = "";
     }
 
+    [DataContract]
     public sealed class MagnifierSection
     {
-        public double Zoom { get; set; } = MagnifierGeometry.DefaultZoom;
+        public MagnifierSection() => SetDefaults();
+
+        [DataMember(Name = "zoom")] public double Zoom { get; set; }
+
+        [OnDeserializing]
+        private void OnDeserializing(StreamingContext context) => SetDefaults();
+
+        private void SetDefaults() => Zoom = MagnifierGeometry.DefaultZoom;
     }
 
+    [DataContract]
     public sealed class WindowSection
     {
-        public bool AlwaysOnTop { get; set; }
-        public double? Left { get; set; }
-        public double? Top { get; set; }
-        public int SelectedTab { get; set; }
+        [DataMember(Name = "alwaysOnTop", Order = 0)] public bool AlwaysOnTop { get; set; }
+        [DataMember(Name = "left", Order = 1)] public double? Left { get; set; }
+        [DataMember(Name = "top", Order = 2)] public double? Top { get; set; }
+        [DataMember(Name = "selectedTab", Order = 3)] public int SelectedTab { get; set; }
     }
 
     /// <summary>Replaces anything missing or out of range with defaults.</summary>
@@ -74,11 +136,29 @@ public sealed class AppSettings
         SchemaVersion = CurrentSchemaVersion;
         return this;
     }
-}
 
-[JsonSourceGenerationOptions(WriteIndented = true, PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-[JsonSerializable(typeof(AppSettings))]
-internal sealed partial class SettingsJsonContext : JsonSerializerContext;
+    private static readonly DataContractJsonSerializer Serializer = new(typeof(AppSettings));
+
+    /// <summary>Indented UTF-8 JSON (no byte-order mark).</summary>
+    public string ToJson()
+    {
+        using var stream = new MemoryStream();
+        using (var writer = JsonReaderWriterFactory.CreateJsonWriter(stream, new UTF8Encoding(false), ownsStream: false, indent: true, indentChars: "  "))
+        {
+            Serializer.WriteObject(writer, this);
+            writer.Flush();
+        }
+        return Encoding.UTF8.GetString(stream.ToArray());
+    }
+
+    /// <summary>Parses settings JSON; throws on malformed input or a non-object document.</summary>
+    public static AppSettings FromJson(string json)
+    {
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
+        return Serializer.ReadObject(stream) as AppSettings
+            ?? throw new SerializationException("The settings document is empty (null).");
+    }
+}
 
 /// <summary>
 /// Loads and saves <see cref="AppSettings"/>. A missing, unreadable, corrupt or newer-schema file
@@ -117,9 +197,7 @@ public sealed class SettingsStore
 
         try
         {
-            var loaded = JsonSerializer.Deserialize(json, SettingsJsonContext.Default.AppSettings);
-            if (loaded is null)
-                throw new JsonException("empty document");
+            var loaded = AppSettings.FromJson(json);
             if (loaded.SchemaVersion > AppSettings.CurrentSchemaVersion)
                 return (new AppSettings(), $"设置文件版本 {loaded.SchemaVersion} 比本程序新，已使用默认设置");
             return (loaded.Normalized(), null);
@@ -143,7 +221,7 @@ public sealed class SettingsStore
     {
         System.IO.Directory.CreateDirectory(Directory);
         var temp = FilePath + ".tmp";
-        File.WriteAllText(temp, JsonSerializer.Serialize(settings, SettingsJsonContext.Default.AppSettings));
+        File.WriteAllText(temp, settings.ToJson());
         // File.Move(..., overwrite) is .NET Core 3.0+; File.Replace is the atomic equivalent here.
         if (File.Exists(FilePath))
             File.Replace(temp, FilePath, null);

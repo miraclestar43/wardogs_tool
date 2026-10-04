@@ -6,9 +6,9 @@
     <RootNamespace>WardogsTool.Core</RootNamespace>
   </PropertyGroup>
 
+  <!-- Settings use the built-in DataContractJsonSerializer: no NuGet dependencies to ship. -->
   <ItemGroup>
-    <!-- .NET Framework has no System.Text.Json; the NuGet package brings it (plus its dependencies). -->
-    <PackageReference Include="System.Text.Json" Version="10.0.0" />
+    <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
 
   <ItemGroup>

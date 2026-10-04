@@ -1,60 +1,62 @@
-# Manual acceptance checklist
+# Manual acceptance checklist · 手动验收清单
 
-Run these with the published `dist\WardogsTool-portable\WardogsTool.exe`. Items marked **(in game)** can only be checked inside WARDOGS; the rest were also covered by the automated probe ([validation/input-probe-report.md](validation/input-probe-report.md)) but are worth a quick look on your own setup.
+Run these with the published `dist\WardogsTool-portable\WardogsTool.exe`, WARDOGS in **borderless windowed** mode, the tool started normally (not as administrator unless the game is). Items marked **(in game)** can only be checked inside WARDOGS; the others are also covered by the automated probe ([validation/input-probe-report.md](validation/input-probe-report.md)) but worth a quick look on your own setup.
 
-Setup: WARDOGS in borderless windowed mode, the tool started normally (not as administrator, unless the game is).
+## Hammer · 敲锤
 
-## Global hotkeys
+- [ ] **(in game)** F9 starts hammering while WARDOGS is focused; the badge turns green RUNNING.
+- [ ] **(in game)** A second F9 while running does nothing.
+- [ ] **(in game)** Esc stops it — and the game still reacts to that Esc.
+- [ ] **(in game)** 310 ms builds with the small/medium hammer, 510 ms with the large hammer, at the same rate as the Python tool on the same structure.
+- [ ] **(in game)** Same rate with the tool window behind the game or minimized.
+- [ ] **(in game)** Stopping in the middle of a 510 ms hold releases the button at once (you can look/click normally).
+- [ ] **(in game)** F12 and closing the window mid-hold: no mouse button stays stuck.
 
-- [ ] **(in game)** With the game focused, **F9** starts hammering; the tool's badge turns green RUNNING.
-- [ ] **(in game)** **Esc** stops it — and the game still reacts to that Esc (menu opens/closes as usual): the key was not swallowed.
-- [ ] **(in game)** **F8** starts anti-AFK; the status line counts down.
-- [ ] **(in game)** F8 and F9 still do whatever the game binds them to (if anything).
-- [ ] Holding F9 down does not restart hammering after Esc; only a new F9 press does.
-- [ ] **F12** stops everything and closes the tool.
+## Anti-AFK · 防挂机
 
-## Fast hammer
+- [ ] **(in game)** F8 starts it (use a short period such as 10 s to watch); the countdown runs.
+- [ ] **(in game)** Every generated key-down gets its key-up; no key stays stuck after stopping.
+- [ ] Stop button / Esc stop it.
 
-- [ ] **(in game)** 310 ms (小/中锤) builds with a small/medium hammer at the expected rate.
-- [ ] **(in game)** 510 ms (大锤) builds with the large hammer at the expected rate.
-- [ ] **(in game)** Compare with the Python tool on the same structure: same hits per minute, same building progress.
-- [ ] **(in game)** Same rate with the tool window behind the game or minimized (Windows 11 throttles timers of hidden windows; the port is built not to be affected).
-- [ ] The preset radios are disabled while running and re-enabled after Esc.
+## Simultaneous operation · 同时运行
 
-## Simultaneous hammer + anti-AFK
+- [ ] **(in game)** Hammer + anti-AFK run together; hammering continues while the key fires.
+- [ ] The Hammer tab's 停止敲锤 stops only hammering; the Anti-AFK tab's 停止防挂机 stops only anti-AFK.
+- [ ] Esc stops both.
 
-- [ ] **(in game)** F8, then F9: hammering continues normally while the anti-AFK key fires (set the period to e.g. 10 s to see it).
-- [ ] **(in game)** The anti-AFK key (`c` by default) does what you expect in game and does not interrupt hammering in a harmful way.
-- [ ] One Esc stops both.
+## Hotkeys · 快捷键
 
-## Stop cleanup (no stuck mouse button)
+- [ ] **(in game)** F8 / F9 / F10 / Esc work while WardogsTool is unfocused and after Alt-Tab.
+- [ ] **(in game)** Holding a hotkey down does not retrigger it.
+- [ ] **(in game)** The keys are not swallowed: the game still gets F8 / F9 / F10 / Esc (if it binds them).
 
-- [ ] **(in game)** Esc in the middle of a 510 ms hold: the hammer stops at once and the left button is released (you can click/look normally).
-- [ ] **(in game)** F12 mid-hold: the tool closes and the button is released.
-- [ ] **(in game)** Closing the window with ✕ mid-hold: same.
-- [ ] Anti-AFK stopped right after a press: the key is not left held.
+## Mortar · 迫击炮
 
-## Always on top
+Enter the same values in `python wardogs_tool.py` and `WardogsTool.exe`:
 
-- [ ] Tick **窗口置顶 / Always on top**: the tool stays above the game window (borderless windowed).
-- [ ] Untick it: the game can cover the tool again.
-- [ ] Restart the tool: the setting is remembered, and so are the window position, tab, hammer preset, anti-AFK values and mortar position.
-
-## Python-vs-C# mortar parity
-
-Enter the same values in both tools (`python wardogs_tool.py` and `WardogsTool.exe`) and compare all three lines:
-
-| Mortar | Target | Expected |
+| Mortar | Target | Expected (both tools) |
 |---|---|---|
 | `100.32 59.45` | `104.39 63.59` | `DIRECTION: 045°` · `RANGE:     581 m` · `Bearing exact: 44.51°   Range exact: 580.56 m` |
 | `78.49 71.84` | `81.44, 70.78` | `DIRECTION: 110°` · `RANGE:     313 m` |
 | `78.49 71.84` | `83.60 72.96` | `DIRECTION: 078°` · `RANGE:     523 m` |
-| `78.49 71.84` | `abc 1` | red `目标坐标: could not convert string to float: 'abc'`, previous result stays |
-| a few real in-game readings of your own | | identical in both |
+| `78.49 71.84` | `abc 1` | red `目标坐标: could not convert string to float: 'abc'`; previous result stays |
 
-- [ ] After Enter, the target text is selected and typing replaces it; the mortar position stays.
-- [ ] **(in game)** Firing with the shown direction/range hits as it did with the Python tool.
+- [ ] A few real in-game readings of your own give identical results in both tools.
+- [ ] **(in game)** Firing with the shown direction/range hits as before.
 
-## Distribution
+## Magnifier · 放大镜
 
-- [ ] Copy `WardogsTool.exe` to a machine (or user account) with no Python and no .NET installed: it starts by double-click, no console window, no UAC prompt.
+- [ ] **(in game)** F10 toggles the lens while WARDOGS is focused, and the game still receives F10.
+- [ ] **(in game)** The centre of the screen is magnified (the lens shows the game, not a black or frozen image).
+- [ ] **(in game)** Each zoom (1.5x–4.0x) looks right; the choice is remembered after restart.
+- [ ] **(in game)** The lens is click-through and never takes focus: shooting/aiming through it works, the game keeps keyboard input.
+- [ ] No recursive "mirror" effect inside the lens.
+- [ ] **(in game)** The game stays responsive with the lens on (no stutter or noticeable input lag).
+- [ ] F10 again removes it immediately; quitting the tool (F12 / ✕) removes it too.
+- [ ] Multi-monitor: the lens appears on the monitor the game is on.
+
+## Window · 窗口
+
+- [ ] Settings tab → 窗口置顶 / Always on top keeps the tool above the game; unticking lets the game cover it.
+- [ ] Restart: always-on-top, window position, tab, hammer preset, anti-AFK values, mortar position and zoom are remembered.
+- [ ] Copy `WardogsTool.exe` to a machine without Python/.NET: it starts by double-click, no console window, **no administrator prompt**.

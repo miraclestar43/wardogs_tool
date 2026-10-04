@@ -39,7 +39,12 @@ Two things that look like differences but are deliberate parity measures:
 - **Timer.** `timeBeginPeriod(1)` alone does not reproduce Python's timing: from Windows 11 on, a window-owning process that is minimized or fully covered (the tool behind the game) loses the raised resolution. Measured with the tool minimized, a plain wait gave 317.6 ms holds and 46.6 ms gaps; Python stays at 310.7 / 40.7 ms because CPython 3.11+'s `time.sleep` uses a high-resolution waitable timer. The port now waits on the same kind of timer (310.7 / 40.6 ms minimized).
 - **Stop-all order.** Python's `stop_afk()` returns immediately, then `stop_hammer()` runs. The port cancels anti-AFK, stops the hammer, and only then waits for any owed anti-AFK key-up, so Esc can never let the hammer send one more click or release late.
 - **Scan code thread.** `MapVirtualKeyW` is called during validation on the UI thread, as Python's `tap()` calls it on the Tk thread (keyboard layouts are per thread).
-6. **UI layout**: bilingual labels, hammer as the landing tab, RUNNING/STOPPED badges, a stop button on each tab (each calls stop-all, like Python's single 停止 button).
+6. **UI layout**: bilingual labels; tabs Hammer (landing) / Anti-AFK / Mortar / Magnifier / Settings; RUNNING/STOPPED badges; always-on-top moved to the Settings tab.
+7. **Per-feature stop buttons.** The Hammer tab's 停止敲锤 stops only hammering and the Anti-AFK tab's 停止防挂机 only anti-AFK, so stopping one never stops the other. Esc is unchanged from Python: it stops both.
+
+## New feature (not in Python): centre-screen magnifier
+
+F10 toggles a 600×400 lens centred on the monitor that holds the foreground window, zoom 1.5/2.0/2.5/3.0/4.0x (default 2.0x, persisted). Implementation: the documented Windows Magnification API (`Magnification.dll`, a `WC_MAGNIFIER` control) in a borderless host window with `WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW`; the host is on the control's exclude list; a ~60 Hz invalidate (no screenshot polling) keeps it live. Geometry is pure Core code (`MagnifierGeometry`). No game process access, no image analysis, no fallback to anything in-process. Windows Graphics Capture was not needed: the Magnification API worked on the first try on this machine (see the probe report). Exclusive fullscreen cannot be overlaid by any external window — borderless windowed is required.
 
 ## Known limitations kept from Python
 
@@ -51,11 +56,12 @@ Two things that look like differences but are deliberate parity measures:
 
 ### Unit tests — `test.cmd`
 
-128 tests. Highlights:
+156 tests. Highlights:
 
 - `PythonParityTests`: 4148 mortar cases (three known in-game cases, all eight compass directions, the 359.5/0.5 boundaries, tiny negative angles, 3000 random two-decimal and 1000 full-precision cases), 58 `parse_xy` inputs (incl. `repr()` escaping and astral Unicode digits) and 34 `read_afk_settings` inputs, all recorded from the unmodified Python by `tools/parity/gen_python_reference.py`. Every number, display string and error message matches, except the six intended rejections listed above (one huge range, five anti-AFK inputs), which the test asserts explicitly.
 - `HammerEngineTests` / `AntiAfkEngineTests`: exact event sequences against a fake clock — immediate first down, relative deadlines with no catch-up (7 ms input latency shifts every later deadline), stop during hold / gap, overlapping anti-AFK presses when gap < 50 ms, key-up after stop, exceptions still releasing.
-- Mortar boundaries, non-finite rejection, CPython float modulo, `.2f`/`:g` formatting, hotkey edge detection, settings round-trip and corrupt files.
+- Mortar cardinal directions, four quadrants, the 359.49/359.50 boundary, `-0.0`, scientific notation, non-finite rejection, CPython float modulo, `.2f`/`:g` formatting.
+- Magnifier geometry (centring, negative multi-monitor origins, small monitors, zoom snapping), hotkey edge detection, settings round-trip, schema v1 → v2, corrupt files.
 
 Regenerate the fixture after any change to `wardogs_tool.py`:
 
@@ -73,6 +79,8 @@ tools\WardogsTool.InputProbe\bin\Release\net10.0-windows\WardogsTool.InputProbe.
   --exe dist\WardogsTool-portable\WardogsTool.exe --python <path to python.exe> --out docs\validation
 ```
 
-Latest run: [validation/input-probe-report.md](validation/input-probe-report.md) — 22/22 scenarios pass. Mouse events (`LBUTTONDOWN/UP flags=0x1 mouseData=0 extra=0`) and anti-AFK key events (`vk=0x43 scan=0x2E flags=0x10/0x90`) are field-for-field identical between Python and C#. Holds measure 310.7 vs 310.8 ms and 510.7 vs 510.7 ms, gaps 41.3 vs 40.7 ms; with the tool window minimized 310.7 vs 310.7 ms and 40.7 vs 40.6 ms.
+Latest run: [validation/input-probe-report.md](validation/input-probe-report.md) — 24/24 scenarios pass, including per-feature stop and the magnifier (lens 600×400 centred on the 2560×1440 monitor, styles correct, click-through, focus kept, 12 px test stripes shown at exactly 24 px at 2.0x and 48 px at 4.0x with no recursion, 0.2 % CPU, gone 150 ms after F10 and after exit). Mouse events (`LBUTTONDOWN/UP flags=0x1 mouseData=0 extra=0`) and anti-AFK key events (`vk=0x43 scan=0x2E flags=0x10/0x90`) are field-for-field identical between Python and C#. Holds measure 310.7 vs 310.8 ms and 510.7 vs 510.7 ms, gaps 41.3 vs 40.7 ms; with the tool window minimized 310.7 vs 310.7 ms and 40.7 vs 40.6 ms.
+
+Run-to-run variation: both tools occasionally stretch a single 40 ms gap to ~46–48 ms (Windows thread scheduling); means stay within 1–2 ms of nominal. The probe fails a target whose mean drifts more than 3 ms — one earlier run failed on the **Python** side for exactly this (510 ms scenario, gap mean 43.1 ms, max 48.2 ms; C# 41.1 / 42.1 ms in the same run); the rerun that produced the committed report passed 24/24.
 
 What the probe cannot prove: that WARDOGS itself accepts this input. It shows the C# tool sends exactly what the Python tool sends; the in-game check is in [ACCEPTANCE.md](ACCEPTANCE.md).

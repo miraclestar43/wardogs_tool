@@ -16,6 +16,24 @@ public static class HammerPresets
     public static readonly IReadOnlyList<HammerPreset> All = [SmallMedium, Large];
 
     public static HammerPreset FromHoldMs(int holdMs) => All.FirstOrDefault(p => p.HoldMs == holdMs) ?? SmallMedium;
+
+    /// <summary>The order F9 steps through after OFF: large hammer first, then small/medium.</summary>
+    public static readonly IReadOnlyList<HammerPreset> HotkeyCycle = [Large, SmallMedium];
+
+    /// <summary>
+    /// One F9 press: OFF → Large (510 ms) → Small/Medium (310 ms) → OFF. Each press advances exactly
+    /// one step. <paramref name="runningHoldMs"/> is the hold the hammer is running with, or null
+    /// when it is off; the result is the preset to run next, or null for OFF.
+    /// </summary>
+    public static HammerPreset? NextHotkeyState(int? runningHoldMs)
+    {
+        if (runningHoldMs is not { } hold)
+            return HotkeyCycle[0];
+        for (var i = 0; i < HotkeyCycle.Count; i++)
+            if (HotkeyCycle[i].HoldMs == hold)
+                return i + 1 < HotkeyCycle.Count ? HotkeyCycle[i + 1] : null;
+        return null; // running with a hold outside the cycle: the next press turns it off
+    }
 }
 
 public enum HammerState

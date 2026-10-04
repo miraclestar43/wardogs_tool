@@ -63,6 +63,14 @@ public class SettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public void Default_path_is_derived_from_the_roaming_appdata_folder()
+    {
+        var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        Assert.Equal(Path.Combine(appData, "WardogsTool"), SettingsStore.DefaultDirectory);
+        Assert.Equal(Path.Combine(appData, "WardogsTool", "settings.json"), new SettingsStore(SettingsStore.DefaultDirectory).FilePath);
+    }
+
+    [Fact]
     public void Missing_file_gives_python_defaults()
     {
         var (s, warning) = new SettingsStore(_dir).Load();

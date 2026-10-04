@@ -32,6 +32,43 @@ public class HammerEngineTests
     }
 
     [Fact]
+    public void F9_cycles_off_large_small_off_one_step_per_press()
+    {
+        int? running = null;
+        var seen = new List<string>();
+        for (var press = 0; press < 6; press++)
+        {
+            running = HammerPresets.NextHotkeyState(running)?.HoldMs;
+            seen.Add(running is { } h ? $"{h}" : "OFF");
+        }
+        Assert.Equal(["510", "310", "OFF", "510", "310", "OFF"], seen);
+        Assert.Same(HammerPresets.Large, HammerPresets.NextHotkeyState(null));
+        Assert.Null(HammerPresets.NextHotkeyState(123)); // unknown hold: next press turns it off
+    }
+
+    [Fact]
+    public void Switching_presets_releases_the_button_before_the_new_cycle_starts()
+    {
+        // What the F9 switch Large -> Small/Medium does: Stop (mid-hold), then Start(310).
+        var (engine, time, _, log) = Create(parkAfterMs: 200);
+        engine.Start(510);
+        Assert.True(time.Parked.Wait(WaitTimeout));
+        Assert.True(engine.Stop());
+        Assert.False(engine.IsRunning);
+        var afterStop = Lines(log);
+        Assert.Equal("up @0", afterStop[^1]); // released before Stop() returned
+
+        Assert.True(engine.Start(310));
+        SpinWait.SpinUntil(() => Lines(log).Length > afterStop.Length, WaitTimeout);
+        engine.Stop();
+        var all = Lines(log).Where(l => !l.StartsWith("wait")).ToArray();
+        Assert.Equal(new[] { "down @0", "up @0", "down @0", "up @0" }, all);
+        // Never two downs in a row: every down is released before the next one.
+        for (var i = 1; i < all.Length; i++)
+            Assert.False(all[i].StartsWith("down") && all[i - 1].StartsWith("down"));
+    }
+
+    [Fact]
     public void Sequence_is_immediate_down_then_hold_up_gap_repeat()
     {
         var (engine, time, _, log) = Create(parkAfterMs: 1000);

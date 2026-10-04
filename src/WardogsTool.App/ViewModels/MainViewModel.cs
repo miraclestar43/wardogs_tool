@@ -29,7 +29,7 @@ public sealed class MainViewModel : ObservableObject
     public const int TabCount = 5;
 
     /// <summary>Based on IDLE_TEXT in wardogs_tool.py, plus F10 and the global meaning of Esc.</summary>
-    public const string IdleText = "已停止   F9 敲锤 | F8 防挂机 | F10 放大镜 | Esc 全部停止 | F12 退出";
+    public const string IdleText = "已停止   F9 敲锤：关（→ 大锤 → 小/中锤）| F8 防挂机 | F10 放大镜 | Esc 全部停止 | F12 退出";
 
     /// <summary>Python keeps the latest 20 mortar results (history.delete(20, "end")).</summary>
     public const int HistoryLimit = 20;
@@ -106,7 +106,7 @@ public sealed class MainViewModel : ObservableObject
         switch (virtualKey)
         {
             case VkF8: StartAfk(); break;
-            case VkF9: StartHammer(); break;
+            case VkF9: CycleHammer(); break;
             case VkF10: CycleMagnifier(); break;
             case VkEscape: StopAll(); break;
             case VkF12: QuitRequested?.Invoke(this, EventArgs.Empty); break;
@@ -149,13 +149,17 @@ public sealed class MainViewModel : ObservableObject
         return _settings;
     }
 
-    /// <summary>Python update_status(), plus the per-feature state shown on each tab.</summary>
+    /// <summary>
+    /// Python update_status(), plus the per-feature state shown on each tab. The F9 hammer state is
+    /// always part of the status line, so it is visible from every tab.
+    /// </summary>
     public void Refresh()
     {
         IsHammerRunning = _hammer.IsRunning;
         IsAfkRunning = _afk.IsRunning;
+        RunningHoldMs = _hammer.IsRunning ? _hammer.HoldMs : null;
 
-        var parts = new List<string>();
+        var parts = new List<string> { $"F9 敲锤：{HammerStateText}" };
         string? countdown = null;
         if (_afk.IsRunning && _afk.NextRoundAt is { } next)
         {
@@ -163,11 +167,11 @@ public sealed class MainViewModel : ObservableObject
             countdown = MortarText.FixedPoint(left, 0); // Python f"{left:.0f}"
             parts.Add($"防挂机 {countdown} 秒后按键");
         }
-        if (_hammer.IsRunning)
-            parts.Add($"敲锤 {HoldMs} ms");
         if (_magnifier.IsShown)
             parts.Add($"放大镜 {Zoom:0.0}x");
-        StatusText = parts.Count > 0 ? "运行中   " + string.Join(" | ", parts) : IdleText;
+        StatusText = _hammer.IsRunning || _afk.IsRunning || _magnifier.IsShown
+            ? "运行中   " + string.Join(" | ", parts)
+            : IdleText;
         AfkCountdown = countdown is null ? "" : $"{countdown} 秒后按键";
 
         if (_hammer.LastError is { } hammerError && !_hammer.IsRunning && _reportedHammerError != hammerError)
@@ -229,12 +233,68 @@ public sealed class MainViewModel : ObservableObject
     /// <summary>Python disables the preset radios while hammering.</summary>
     public bool CanEditHammer => !IsHammerRunning;
 
-    /// <summary>Python start_hammer(): ignored while running; the preset is read once at start.</summary>
+    /// <summary>
+    /// The Hammer tab's start button: runs the preset picked with the radio buttons (ignored while
+    /// running; the preset is read once at start, like Python's start_hammer()).
+    /// </summary>
     public void StartHammer()
     {
         _hammer.Start(HoldMs);
         Refresh();
     }
+
+    /// <summary>
+    /// F9: one step of OFF → 大锤 510 ms → 小/中锤 310 ms → OFF per fresh key-down (auto-repeat is
+    /// filtered out by the hotkey service). The step is taken from what the engine is actually
+    /// running, so a run started with the button cycles on from there.
+    /// </summary>
+    /// <remarks>
+    /// Switching presets stops the running cycle first. HammerEngine.Stop() returns only after the
+    /// worker has exited, and the worker sends the mouse-up for a button it is holding before it
+    /// exits — so the left button is always released before the new timing cycle presses it.
+    /// If the old worker does not exit in time, nothing new is started.
+    /// </remarks>
+    public void CycleHammer()
+    {
+        int? running = _hammer.IsRunning ? _hammer.HoldMs : null;
+        var next = HammerPresets.NextHotkeyState(running);
+        if (running is not null && !_hammer.Stop())
+        {
+            Refresh();
+            return;
+        }
+        if (next is not null)
+        {
+            HoldMs = next.HoldMs;
+            _hammer.Start(next.HoldMs);
+        }
+        Refresh();
+    }
+
+    private int? _runningHoldMs;
+    /// <summary>Hold of the running hammer, or null when it is off. Drives the F9 state display.</summary>
+    public int? RunningHoldMs
+    {
+        get => _runningHoldMs;
+        private set
+        {
+            if (Set(ref _runningHoldMs, value))
+            {
+                OnPropertyChanged(nameof(IsF9Off));
+                OnPropertyChanged(nameof(IsF9Large));
+                OnPropertyChanged(nameof(IsF9SmallMedium));
+                OnPropertyChanged(nameof(HammerStateText));
+            }
+        }
+    }
+
+    public bool IsF9Off => RunningHoldMs is null;
+    public bool IsF9Large => RunningHoldMs == HammerPresets.Large.HoldMs;
+    public bool IsF9SmallMedium => RunningHoldMs == HammerPresets.SmallMedium.HoldMs;
+
+    /// <summary>"关" or e.g. "大锤 510 ms".</summary>
+    public string HammerStateText =>
+        RunningHoldMs is { } hold ? $"{HammerPresets.FromHoldMs(hold).Name} {hold} ms" : "关";
 
     // ---------- F8 anti-AFK ----------
 

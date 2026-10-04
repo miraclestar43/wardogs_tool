@@ -25,6 +25,25 @@ public static class MagnifierGeometry
     public const int DefaultLensWidth = 600;
     public const int DefaultLensHeight = 400;
 
+    /// <summary>Zooms the F10 hotkey steps through, in order. 1.5x and 2.5x are UI-only.</summary>
+    public static readonly IReadOnlyList<double> HotkeyCycle = [2.0, 3.0, 4.0];
+
+    /// <summary>
+    /// One F10 press: OFF → 2.0x → 3.0x → 4.0x → OFF. Each press advances exactly one step (no
+    /// multi-click timing). If the lens is on at a UI-only zoom, the press moves to the next larger
+    /// cycle step (1.5x → 2.0x, 2.5x → 3.0x).
+    /// </summary>
+    /// <returns>Whether the lens should be on, and at which zoom (unchanged when turning off).</returns>
+    public static (bool On, double Zoom) NextHotkeyState(bool isOn, double zoom)
+    {
+        if (!isOn)
+            return (true, HotkeyCycle[0]);
+        foreach (var step in HotkeyCycle)
+            if (step > zoom + 1e-9)
+                return (true, step);
+        return (false, zoom);
+    }
+
     /// <summary>Snaps a stored zoom to the nearest offered choice (bad values → 2.0x).</summary>
     public static double NormalizeZoom(double zoom) =>
         double.IsFinite(zoom) ? ZoomChoices.MinBy(z => Math.Abs(z - zoom)) : DefaultZoom;

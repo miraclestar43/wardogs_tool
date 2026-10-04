@@ -11,6 +11,30 @@ public class MagnifierTests
         Assert.Equal([1.5, 2.0, 2.5, 3.0, 4.0], MagnifierGeometry.ZoomChoices);
     }
 
+    [Fact]
+    public void F10_cycles_off_2x_3x_4x_off_one_step_per_press()
+    {
+        var state = (On: false, Zoom: 4.0); // starting zoom does not matter when off
+        var seen = new List<string>();
+        for (var press = 0; press < 8; press++)
+        {
+            state = MagnifierGeometry.NextHotkeyState(state.On, state.Zoom);
+            seen.Add(state.On ? $"{state.Zoom:0.0}x" : "OFF");
+        }
+        Assert.Equal(["2.0x", "3.0x", "4.0x", "OFF", "2.0x", "3.0x", "4.0x", "OFF"], seen);
+    }
+
+    [Theory]
+    [InlineData(1.5, true, 2.0)]   // UI-only zoom: next larger cycle step
+    [InlineData(2.5, true, 3.0)]
+    [InlineData(2.0, true, 3.0)]
+    [InlineData(3.0, true, 4.0)]
+    [InlineData(4.0, false, 4.0)]
+    public void F10_from_any_zoom_while_on(double zoom, bool expectedOn, double expectedZoom)
+    {
+        Assert.Equal((expectedOn, expectedZoom), MagnifierGeometry.NextHotkeyState(true, zoom));
+    }
+
     [Theory]
     [InlineData(2.0, 2.0)]
     [InlineData(4.0, 4.0)]

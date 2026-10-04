@@ -28,8 +28,8 @@ public sealed class MainViewModel : ObservableObject
     /// <summary>Tabs: 0 Hammer, 1 Anti-AFK, 2 Mortar, 3 Magnifier, 4 Settings.</summary>
     public const int TabCount = 5;
 
-    /// <summary>IDLE_TEXT in wardogs_tool.py.</summary>
-    public const string IdleText = "已停止   F8 防挂机 | F9 敲锤 | Esc 停止 | F12 退出";
+    /// <summary>Based on IDLE_TEXT in wardogs_tool.py, plus F10 and the global meaning of Esc.</summary>
+    public const string IdleText = "已停止   F9 敲锤 | F8 防挂机 | F10 放大镜 | Esc 全部停止 | F12 退出";
 
     /// <summary>Python keeps the latest 20 mortar results (history.delete(20, "end")).</summary>
     public const int HistoryLimit = 20;
@@ -65,9 +65,7 @@ public sealed class MainViewModel : ObservableObject
         _selectedTab = Math.Clamp(settings.Window.SelectedTab, 0, TabCount - 1);
 
         StartHammerCommand = new RelayCommand(StartHammer);
-        StopHammerCommand = new RelayCommand(StopHammer);
         StartAfkCommand = new RelayCommand(StartAfk);
-        StopAfkCommand = new RelayCommand(StopAfk);
         StopAllCommand = new RelayCommand(StopAll);
         ToggleMagnifierCommand = new RelayCommand(ToggleMagnifier);
         Refresh();
@@ -75,15 +73,17 @@ public sealed class MainViewModel : ObservableObject
     }
 
     public ICommand StartHammerCommand { get; }
-    public ICommand StopHammerCommand { get; }
     public ICommand StartAfkCommand { get; }
-    public ICommand StopAfkCommand { get; }
+    /// <summary>Every Stop button and Esc.</summary>
     public ICommand StopAllCommand { get; }
     public ICommand ToggleMagnifierCommand { get; }
 
     public string SettingsPath { get; }
 
-    /// <summary>F12 (Python: quit()). The window closes itself, which runs <see cref="Shutdown"/>.</summary>
+    /// <summary>
+    /// F12 (Python: quit()). The window closes itself, which runs <see cref="Shutdown"/>: the same
+    /// global stop as Esc, then exit.
+    /// </summary>
     public event EventHandler? QuitRequested;
 
     /// <summary>A mortar result was shown; the view selects the target box for the next entry.</summary>
@@ -100,51 +100,43 @@ public sealed class MainViewModel : ObservableObject
     private int _selectedTab;
     public int SelectedTab { get => _selectedTab; set => Set(ref _selectedTab, value); }
 
-    /// <summary>Python poll(): F8 / F9 / Esc / F12 fresh presses.</summary>
+    /// <summary>Python poll(): F8 / F9 / Esc / F12 fresh presses, plus F10.</summary>
     public void OnHotkey(int virtualKey)
     {
         switch (virtualKey)
         {
             case VkF8: StartAfk(); break;
             case VkF9: StartHammer(); break;
-            case VkF10: ToggleMagnifier(); break;
+            case VkF10: CycleMagnifier(); break;
             case VkEscape: StopAll(); break;
             case VkF12: QuitRequested?.Invoke(this, EventArgs.Empty); break;
         }
     }
 
     /// <summary>
-    /// Python stop_all(): anti-AFK, then the hammer. Python's stop_afk() returns at once, so the
-    /// hammer is stopped before waiting for any anti-AFK key-up — otherwise that wait (up to
-    /// 50 ms) could let the hammer send one more click or release late.
+    /// Global stop — Esc and every Stop button; does not exit. Stops anti-AFK and the hammer,
+    /// which release whatever they hold (the hammer's mouse button, any anti-AFK key still down),
+    /// and hides the magnifier.
     /// </summary>
+    /// <remarks>
+    /// Order as in Python's stop_all(): anti-AFK, then the hammer. Python's stop_afk() returns at
+    /// once, so the hammer is stopped before waiting for any anti-AFK key-up — otherwise that wait
+    /// (up to 50 ms) could let the hammer send one more click or release late.
+    /// </remarks>
     public void StopAll()
     {
         _afk.RequestStop();
         _hammer.Stop();
         _afk.Stop();
+        RunMagnifierAction(_magnifier.Hide);
+        RefreshMagnifier();
         Refresh();
     }
 
-    /// <summary>The hammer's own stop button: stops hammering only, anti-AFK keeps running.</summary>
-    public void StopHammer()
-    {
-        _hammer.Stop();
-        Refresh();
-    }
-
-    /// <summary>The anti-AFK tab's own stop button: hammering keeps running.</summary>
-    public void StopAfk()
-    {
-        _afk.Stop();
-        Refresh();
-    }
-
-    /// <summary>Stops everything, removes the lens and writes the settings. Called when the window closes.</summary>
+    /// <summary>F12 / closing the window: the global stop, then the settings to save before exit.</summary>
     public AppSettings Shutdown()
     {
         StopAll();
-        _magnifier.Hide();
         _settings.Magnifier.Zoom = Zoom;
         _settings.Hammer.HoldMs = HoldMs;
         _settings.AntiAfk.Key = AfkKey;
@@ -173,6 +165,8 @@ public sealed class MainViewModel : ObservableObject
         }
         if (_hammer.IsRunning)
             parts.Add($"敲锤 {HoldMs} ms");
+        if (_magnifier.IsShown)
+            parts.Add($"放大镜 {Zoom:0.0}x");
         StatusText = parts.Count > 0 ? "运行中   " + string.Join(" | ", parts) : IdleText;
         AfkCountdown = countdown is null ? "" : $"{countdown} 秒后按键";
 
@@ -311,7 +305,28 @@ public sealed class MainViewModel : ObservableObject
     private string _magnifierStatus = "";
     public string MagnifierStatus { get => _magnifierStatus; private set => Set(ref _magnifierStatus, value); }
 
-    /// <summary>F10: lens on/off. Not affected by Esc (Esc stops automation only).</summary>
+    /// <summary>
+    /// F10: one step of OFF → 2.0x → 3.0x → 4.0x → OFF per fresh key-down. Esc and F12 also turn
+    /// the lens off (<see cref="StopAll"/>).
+    /// </summary>
+    public void CycleMagnifier()
+    {
+        var (on, zoom) = MagnifierGeometry.NextHotkeyState(_magnifier.IsShown, Zoom);
+        RunMagnifierAction(() =>
+        {
+            if (!on)
+            {
+                _magnifier.Hide();
+                return;
+            }
+            Set(ref _zoom, zoom, nameof(Zoom));
+            if (_magnifier.IsShown) _magnifier.SetZoom(zoom);
+            else _magnifier.Show(zoom);
+        });
+        RefreshMagnifier();
+    }
+
+    /// <summary>The Magnifier tab's on/off button: shows the lens at the zoom picked in the list.</summary>
     public void ToggleMagnifier()
     {
         RunMagnifierAction(() =>

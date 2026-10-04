@@ -63,11 +63,19 @@ internal sealed unsafe class MagnifierOverlay : IMagnifierOverlay
         _refresh.Start();
     }
 
-    /// <summary>Changes the zoom while shown: same monitor and lens, new source area.</summary>
+    /// <summary>
+    /// Changes the zoom while shown: same monitor and lens, new source area. Also puts the lens
+    /// back on top, in case another topmost window (e.g. a topmost game window that was clicked)
+    /// has been raised above it since it was shown.
+    /// </summary>
     public void SetZoom(double zoom)
     {
-        if (IsShown && _monitor is { } monitor)
-            Apply(MagnifierGeometry.Compute(monitor, zoom));
+        if (!IsShown || _monitor is not { } monitor)
+            return;
+        var layout = MagnifierGeometry.Compute(monitor, zoom);
+        Apply(layout);
+        NativeMethods.SetWindowPos(_host, NativeMethods.HWND_TOPMOST, layout.Lens.Left, layout.Lens.Top,
+            layout.Lens.Width, layout.Lens.Height, NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_SHOWWINDOW);
     }
 
     public void Hide()

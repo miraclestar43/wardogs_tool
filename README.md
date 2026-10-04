@@ -3,9 +3,11 @@
 **战狗（WARDOGS）土木、建造辅助工具：快速敲锤，附带迫击炮计算器（方向 / 距离）、屏幕中心放大镜（倍镜）和防挂机。**
 **Fast hammering for building in WARDOGS, plus a mortar calculator, a centre-screen magnifier (zoom) and anti-AFK.**
 
+
 做工兵、修建工事、盖建筑时不用再狂点鼠标：按 **F9** 自动敲锤（速敲 / 光速敲锤），小锤、中锤、大锤各有合适的按住时长。整个程序不到 100 KB，双击 `WardogsTool.exe` 即用：Windows 10 1903 及以上 / Windows 11 自带所需的运行环境，不需要另外安装 Python 或 .NET，不需要管理员权限。
 
 WardogsTool takes the clicking out of construction: press **F9** and it hammers for you, with the right hold time for small, medium and large hammers. The whole tool is under 100 KB; double-click `WardogsTool.exe`. Windows 10 1903+ and Windows 11 already include what it needs — no Python, no separate .NET install, no administrator rights.
+下载链接：https://github.com/miraclestar43/wardogs_tool/releases/tag/v0.1.0
 
 **关键词 Keywords：** 战狗 · WARDOGS · 战狗工具 · 土木 · 建造 · 工兵 · 修建 · 敲锤 · 快速敲锤 · 自动敲锤 · 速敲 · 光速敲锤 · 大锤 · 中锤 · 小锤 · 迫击炮 · 迫击炮计算 · 迫击炮计算器 · 迫击炮方向 · 迫击炮距离 · 方位角 · 坐标计算 · 放大镜 · 倍镜 · 屏幕放大 · 中心放大 · 防挂机 · fast hammer · auto hammer · mortar calculator · magnifier · zoom · anti-AFK
 

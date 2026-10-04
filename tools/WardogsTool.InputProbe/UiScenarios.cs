@@ -75,9 +75,9 @@ internal static class UiScenarios
 
             (string Mortar, string Target, string Dir, string Range)[] cases =
             [
-                ("100.32 59.45", "104.39 63.59", "DIRECTION: 045°", "RANGE:     581 m"),
+                ("100.32 59.45", "x104.39, y63.59", "DIRECTION: 045°", "RANGE:     581 m"), // WARDOGS map format
                 ("78.49 71.84", "81.44, 70.78", "DIRECTION: 110°", "RANGE:     313 m"),
-                ("78.49 71.84", "83.60 72.96", "DIRECTION: 078°", "RANGE:     523 m"),
+                ("78.49 71.84", "y72.96, x83.60", "DIRECTION: 078°", "RANGE:     523 m"), // labels in reverse order
             ];
             foreach (var c in cases)
             {

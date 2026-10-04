@@ -296,14 +296,52 @@
                                 <RowDefinition />
                                 <RowDefinition />
                             </Grid.RowDefinitions>
+                            <Grid.Resources>
+                                <!-- Grey example text shown inside an empty box (WPF has no built-in placeholder). -->
+                                <Style x:Key="Placeholder" TargetType="TextBlock">
+                                    <Setter Property="Text" Value="例如：x134.98, y65.56" />
+                                    <Setter Property="Foreground" Value="{StaticResource Muted}" />
+                                    <Setter Property="Margin" Value="6,0,0,0" />
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                    <Setter Property="IsHitTestVisible" Value="False" />
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </Style>
+                            </Grid.Resources>
                             <TextBlock Text="迫击炮 X Y" VerticalAlignment="Center" Margin="0,0,12,0" />
-                            <TextBox x:Name="MortarBox" Grid.Column="1" Width="170" HorizontalAlignment="Left" Margin="0,3" Padding="3,2"
-                                     Text="{Binding MortarPosition, UpdateSourceTrigger=PropertyChanged}" KeyDown="MortarBox_KeyDown" />
+                            <Grid Grid.Column="1" Width="190" HorizontalAlignment="Left" Margin="0,3">
+                                <TextBox x:Name="MortarBox" Padding="3,2"
+                                         Text="{Binding MortarPosition, UpdateSourceTrigger=PropertyChanged}" KeyDown="MortarBox_KeyDown" />
+                                <TextBlock>
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource Placeholder}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=MortarBox}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
                             <TextBlock Grid.Row="1" Text="目标 X Y" VerticalAlignment="Center" Margin="0,0,12,0" />
-                            <TextBox x:Name="TargetBox" Grid.Row="1" Grid.Column="1" Width="170" HorizontalAlignment="Left" Margin="0,3" Padding="3,2"
-                                     Text="{Binding TargetPosition, UpdateSourceTrigger=PropertyChanged}" KeyDown="TargetBox_KeyDown" />
+                            <Grid Grid.Row="1" Grid.Column="1" Width="190" HorizontalAlignment="Left" Margin="0,3">
+                                <TextBox x:Name="TargetBox" Padding="3,2"
+                                         Text="{Binding TargetPosition, UpdateSourceTrigger=PropertyChanged}" KeyDown="TargetBox_KeyDown" />
+                                <TextBlock>
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource Placeholder}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=TargetBox}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
                         </Grid>
-                        <TextBlock Text="例: 104.39 63.59，回车计算" Style="{StaticResource Hint}" Margin="0,2,0,0" />
+                        <TextBlock Style="{StaticResource Hint}" Margin="0,2,0,0" TextWrapping="Wrap"
+                                   Text="直接照抄地图上的坐标：x134.98, y65.56（x、y 顺序不限，大小写都行）；也可以写 134.98 65.56 或 134.98, 65.56。回车计算。" />
 
                         <TextBlock Text="{Binding DirectionText}" FontFamily="Consolas" FontSize="28" FontWeight="Bold" Margin="0,12,0,0" Foreground="{StaticResource Ink}" />
                         <TextBlock Text="{Binding RangeText}" FontFamily="Consolas" FontSize="28" FontWeight="Bold" Foreground="{StaticResource Ink}" />

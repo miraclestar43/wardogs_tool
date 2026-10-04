@@ -4,6 +4,82 @@ namespace WardogsTool.Core.Tests;
 
 public class ParserTests
 {
+    // ---------- WARDOGS map format: x134.98, y65.56 ----------
+
+    [Theory]
+    [InlineData("x134.98, y65.56")]          // as the map shows it
+    [InlineData("X134.98, Y65.56")]
+    [InlineData("x=134.98, y=65.56")]
+    [InlineData("x134.98 y65.56")]
+    [InlineData("X = 134.98 Y = 65.56")]
+    [InlineData("  x 134.98 ,  y 65.56  ")]
+    [InlineData("x134.98,y65.56")]
+    [InlineData("y65.56, x134.98")]          // labels decide, not order
+    [InlineData("Y=65.56 X=134.98")]
+    [InlineData("134.98 65.56")]             // unlabeled still works
+    [InlineData("134.98, 65.56")]
+    public void Map_format_and_existing_formats(string text)
+    {
+        Assert.True(CoordinateParser.TryParse(text, out var p, out var error), error);
+        Assert.Equal(134.98, p.X);
+        Assert.Equal(65.56, p.Y);
+    }
+
+    [Theory]
+    [InlineData("x-12.5, y-0.25", -12.5, -0.25)]
+    [InlineData("y = -3, x = +7", 7, -3)]
+    [InlineData("x0, y200", 0, 200)]
+    [InlineData("x1e2, y.5", 100, 0.5)]
+    public void Labeled_negative_and_decimal_values(string text, double x, double y)
+    {
+        Assert.True(CoordinateParser.TryParse(text, out var p, out var error), error);
+        Assert.Equal(x, p.X);
+        Assert.Equal(y, p.Y);
+    }
+
+    [Theory]
+    [InlineData("x134.98", CoordinateParser.LabeledFormatMessage)]               // no y
+    [InlineData("y65.56", CoordinateParser.LabeledFormatMessage)]
+    [InlineData("x134.98, x65.56", CoordinateParser.DuplicateLabelMessage)]      // two x
+    [InlineData("Y1, y2", CoordinateParser.DuplicateLabelMessage)]
+    [InlineData("xabc, y65.56", "could not convert string to float: 'abc'")]
+    [InlineData("x134.98, yabc", "could not convert string to float: 'abc'")]
+    [InlineData("x134.98 65.56", CoordinateParser.LabeledFormatMessage)]         // one label, one bare number
+    [InlineData("134.98 y65.56", CoordinateParser.LabeledFormatMessage)]
+    [InlineData("x134.98y65.56", CoordinateParser.LabeledFormatMessage)]         // no separator
+    [InlineData("x, y", CoordinateParser.LabeledFormatMessage)]                  // labels without numbers
+    [InlineData("x=, y=1", CoordinateParser.LabeledFormatMessage)]
+    [InlineData("x1, y2, z3", CoordinateParser.LabeledFormatMessage)]
+    [InlineData("x1，y2", CoordinateParser.LabeledFormatMessage)]                // full-width comma is not a separator
+    [InlineData("x1 == 2, y3", CoordinateParser.LabeledFormatMessage)]
+    public void Malformed_or_ambiguous_labeled_input_is_rejected(string text, string message)
+    {
+        Assert.False(CoordinateParser.TryParse(text, out _, out var error));
+        Assert.Equal(message, error);
+    }
+
+    [Theory]
+    [InlineData("0x10 1", false)]      // hex-looking token does not start with a label
+    [InlineData("Infinity 1", false)]
+    [InlineData("1e5 2", false)]
+    [InlineData("x1 y2", true)]
+    [InlineData("Y = 1 X = 2", true)]
+    public void Labeled_mode_only_when_a_token_starts_with_x_or_y(string text, bool labeled)
+    {
+        Assert.Equal(labeled, CoordinateParser.IsLabeled(text));
+    }
+
+    [Fact]
+    public void Labeled_values_keep_python_number_rules()
+    {
+        // Same overflow / negative-zero handling as unlabeled input.
+        Assert.True(CoordinateParser.TryParse("x-0, y1e400", out var p, out _));
+        Assert.True(DoublePolyfills.IsNegative(p.X));
+        Assert.True(double.IsPositiveInfinity(p.Y));
+    }
+
+    // ---------- unlabeled (wardogs_tool.py parse_xy) ----------
+
     [Theory]
     [InlineData("104.39 63.59")]
     [InlineData("104.39, 63.59")]

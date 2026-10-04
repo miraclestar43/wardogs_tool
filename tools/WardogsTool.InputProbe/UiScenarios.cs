@@ -112,11 +112,17 @@ internal static class UiScenarios
             r.Expect(err is not null && Name(err) == "目标坐标: could not convert string to float: 'abc'", "error message differs from Python");
             r.Expect(Text(root, "DIRECTION: 078°") is not null, "previous result was cleared by an error");
 
-            var topmost = Find(root, ControlType.CheckBox)!;
+            // 窗口置顶 lives on the Settings tab.
+            var settingsTab = Find(root, ControlType.TabItem, e => Name(e).Contains("Settings"))!;
+            ((SelectionItemPattern)settingsTab.GetCurrentPattern(SelectionItemPattern.Pattern)).Select();
+            p.Sleep(300);
+            var topmost = Find(root, ControlType.CheckBox, e => Name(e).Contains("Always on top"))!;
             ((TogglePattern)topmost.GetCurrentPattern(TogglePattern.Pattern)).Toggle();
             p.Sleep(300);
             r2.Metric("topmost after ticking the box", IsTopmost(proc));
             r2.Expect(IsTopmost(proc), "ticking 窗口置顶 did not make the window topmost");
+            ((SelectionItemPattern)mortarTab.GetCurrentPattern(SelectionItemPattern.Pattern)).Select();
+            p.Sleep(300);
 
             Native.SetWindowPos(proc.MainWindowHandle, 0, 150, 120, 0, 0, 0x0001 | 0x0004 | 0x0010 /* NOSIZE|NOZORDER|NOACTIVATE */);
             p.Sleep(300);

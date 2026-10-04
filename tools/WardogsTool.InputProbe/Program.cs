@@ -42,7 +42,10 @@ internal static class Program
         {
             Title = "WardogsTool input probe — do not touch the mouse",
             Width = 640, Height = 420, Topmost = true,
-            WindowStartupLocation = WindowStartupLocation.CenterScreen,
+            // Centred on the monitor (not the work area), where the magnifier lens goes.
+            WindowStartupLocation = WindowStartupLocation.Manual,
+            Left = (SystemParameters.PrimaryScreenWidth - 640) / 2,
+            Top = (SystemParameters.PrimaryScreenHeight - 420) / 2,
             Background = new SolidColorBrush(Color.FromRgb(0x1F, 0x29, 0x37)),
             Content = new System.Windows.Controls.TextBlock
             {
@@ -78,6 +81,9 @@ internal static class Program
             var bottomRight = window.PointToScreen(new Point(window.ActualWidth, window.ActualHeight));
             var centre = new Native.POINT { X = (int)((topLeft.X + bottomRight.X) / 2), Y = (int)((topLeft.Y + bottomRight.Y) / 2) };
             var probe = new Probe(recorder, hwnd, centre, keysAtWindow);
+            var defaultContent = window.Content;
+            void ShowStripes(bool on) => app.Dispatcher.Invoke(() => window.Content = on ? Stripes() : defaultContent);
+            int ClicksAtWindow() => Volatile.Read(ref mouseAtWindow);
 
             new Thread(() =>
             {
@@ -98,7 +104,10 @@ internal static class Program
                     {
                         results.AddRange(Scenarios.RunInputSuite(probe, new CSharpTarget(exe)));
                         results.AddRange(UiScenarios.Run(probe, exe));
+                        results.Add(MagnifierScenarios.PerFeatureStop(probe, exe));
                     }
+                    if (only is "all" or "csharp" or "magnifier")
+                        results.Add(MagnifierScenarios.Magnifier(probe, exe, centre, ShowStripes, ClicksAtWindow));
                     exitCode = results.All(r => r.Pass) ? 0 : 2;
                 }
                 catch (AbortException ex)
@@ -133,6 +142,21 @@ internal static class Program
         Console.WriteLine(report);
         Console.WriteLine($"Report: {path}");
         return abort is null ? exitCode : 3;
+    }
+
+    /// <summary>Vertical black/white stripes, 8 DIP each, for measuring magnification.</summary>
+    private static UIElement Stripes()
+    {
+        var tile = new DrawingGroup();
+        tile.Children.Add(new GeometryDrawing(Brushes.White, null, new RectangleGeometry(new Rect(0, 0, 16, 16))));
+        tile.Children.Add(new GeometryDrawing(Brushes.Black, null, new RectangleGeometry(new Rect(0, 0, 8, 16))));
+        var brush = new DrawingBrush(tile)
+        {
+            TileMode = TileMode.Tile, Stretch = Stretch.None,
+            Viewport = new Rect(0, 0, 16, 16), ViewportUnits = BrushMappingMode.Absolute,
+            Viewbox = new Rect(0, 0, 16, 16), ViewboxUnits = BrushMappingMode.Absolute,
+        };
+        return new System.Windows.Controls.Border { Background = brush, SnapsToDevicePixels = true };
     }
 
     private static string Report(List<ScenarioResult> results, string? abort, int mouseAtWindow, string exe)

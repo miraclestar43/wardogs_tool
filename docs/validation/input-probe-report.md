@@ -1,20 +1,20 @@
 # Input probe report
 
-Run: 2026-10-03 14:59 · Microsoft Windows NT 10.0.26100.0 · C# build: `WardogsTool.exe`
+Run: 2026-10-03 17:24 · Microsoft Windows NT 10.0.26100.0 · C# build: `WardogsTool.exe`
 
-Result: **22/22 scenarios passed**. Left-button presses that reached the probe window: 138.
+Result: **24/24 scenarios passed**. Left-button presses that reached the probe window: 156.
 
 ## Hammer 310 ms, tool window minimized
 
 | | Python | C# |
 |---|---|---|
 | **result** | PASS | PASS |
-| first mouse-down after F9 ms | 37.7 | 10.4 |
+| first mouse-down after F9 ms | 36.0 | 11.2 |
 | hold n | 17 | 17 |
-| hold mean/min/max ms | 310.7 / 310.4 / 310.9 | 310.7 / 310.4 / 311.3 |
+| hold mean/min/max ms | 310.6 / 310.4 / 311.0 | 310.8 / 310.3 / 311.4 |
 | gap n | 17 | 17 |
-| gap mean/min/max ms | 40.7 / 40.4 / 41.6 | 40.6 / 40.4 / 41.2 |
-| mouse-up after Esc ms | 35.8 | 3.8 |
+| gap mean/min/max ms | 41.0 / 40.4 / 46.1 | 41.3 / 40.4 / 47.6 |
+| mouse-up after Esc ms | 33.5 | 2.5 |
 | downs / ups | 18 / 18 | 18 / 18 |
 | mouse event shapes | LBUTTONDOWN flags=0x1 mouseData=0x0 extra=0x0; LBUTTONUP flags=0x1 mouseData=0x0 extra=0x0 | LBUTTONDOWN flags=0x1 mouseData=0x0 extra=0x0; LBUTTONUP flags=0x1 mouseData=0x0 extra=0x0 |
 | tool window minimized | True | True |
@@ -24,12 +24,12 @@ Result: **22/22 scenarios passed**. Left-button presses that reached the probe w
 | | Python | C# |
 |---|---|---|
 | **result** | PASS | PASS |
-| first mouse-down after F9 ms | 9.0 | 12.8 |
+| first mouse-down after F9 ms | 16.9 | 11.1 |
 | hold n | 8 | 8 |
-| hold mean/min/max ms | 310.7 / 310.5 / 310.9 | 310.8 / 310.3 / 311.3 |
+| hold mean/min/max ms | 310.6 / 310.4 / 310.9 | 310.8 / 310.4 / 311.2 |
 | gap n | 8 | 8 |
-| gap mean/min/max ms | 41.3 / 40.4 / 45.9 | 40.7 / 40.4 / 41.0 |
-| mouse-up after Esc ms | 20.2 | 2.1 |
+| gap mean/min/max ms | 42.0 / 40.4 / 46.5 | 40.6 / 40.4 / 40.9 |
+| mouse-up after Esc ms | 12.9 | 1.5 |
 | downs / ups | 9 / 9 | 9 / 9 |
 | mouse event shapes | LBUTTONDOWN flags=0x1 mouseData=0x0 extra=0x0; LBUTTONUP flags=0x1 mouseData=0x0 extra=0x0 | LBUTTONDOWN flags=0x1 mouseData=0x0 extra=0x0; LBUTTONUP flags=0x1 mouseData=0x0 extra=0x0 |
 
@@ -46,10 +46,10 @@ Result: **22/22 scenarios passed**. Left-button presses that reached the probe w
 | | Python | C# |
 |---|---|---|
 | **result** | PASS | PASS |
-| press times after F8 ms | 3001.6, 3502.5, 6001.6 | 3010.7, 3511.2, 6010.3 |
-| key held ms | 50.5, 51.2, 50.5 | 51.0, 51.5, 50.6 |
-| 2nd press after 1st ms | 500.9 | 500.5 |
-| round 2 after round 1 ms | 3000.0 | 2999.6 |
+| press times after F8 ms | 3021.3, 3521.2, 6021.3 | 3011.2, 3511.8, 6010.7 |
+| key held ms | 50.5, 50.8, 50.6 | 51.1, 50.9, 51.0 |
+| 2nd press after 1st ms | 500.0 | 500.6 |
+| round 2 after round 1 ms | 3000.0 | 2999.5 |
 | key event shapes | KEYDOWN vk=0x43 scan=0x2E flags=0x10 extra=0x0; KEYUP vk=0x43 scan=0x2E flags=0x90 extra=0x0 | KEYDOWN vk=0x43 scan=0x2E flags=0x10 extra=0x0; KEYUP vk=0x43 scan=0x2E flags=0x90 extra=0x0 |
 
 ## Hammer + anti-AFK together, one Esc stops both
@@ -75,19 +75,19 @@ Result: **22/22 scenarios passed**. Left-button presses that reached the probe w
 |---|---|---|
 | **result** | PASS | PASS |
 | process exited | True | True |
-| mouse-up after quit ms | 15.1 | 1.4 |
+| mouse-up after quit ms | 17.8 | 3.0 |
 
 ## Hammer 510 ms, stop during hold
 
 | | Python | C# |
 |---|---|---|
 | **result** | PASS | PASS |
-| first mouse-down after F9 ms | 5.3 | 15.5 |
+| first mouse-down after F9 ms | 12.7 | 14.6 |
 | hold n | 5 | 5 |
-| hold mean/min/max ms | 510.7 / 510.4 / 511.0 | 510.7 / 510.4 / 511.3 |
+| hold mean/min/max ms | 510.8 / 510.5 / 511.4 | 510.7 / 510.4 / 510.9 |
 | gap n | 5 | 5 |
-| gap mean/min/max ms | 40.8 / 40.4 / 41.1 | 40.7 / 40.3 / 41.5 |
-| mouse-up after Esc ms | 19.2 | 1.6 |
+| gap mean/min/max ms | 41.9 / 40.5 / 46.3 | 40.7 / 40.5 / 41.0 |
+| mouse-up after Esc ms | 9.2 | 3.0 |
 | downs / ups | 6 / 6 | 6 / 6 |
 | mouse event shapes | LBUTTONDOWN flags=0x1 mouseData=0x0 extra=0x0; LBUTTONUP flags=0x1 mouseData=0x0 extra=0x0 | LBUTTONDOWN flags=0x1 mouseData=0x0 extra=0x0; LBUTTONUP flags=0x1 mouseData=0x0 extra=0x0 |
 
@@ -97,7 +97,7 @@ Result: **22/22 scenarios passed**. Left-button presses that reached the probe w
 |---|---|---|
 | **result** | PASS | PASS |
 | process exited | True | True |
-| mouse-up after quit ms | 1.2 | 0.9 |
+| mouse-up after quit ms | 2.9 | 0.9 |
 
 ## No errors printed by the tool (stderr)
 
@@ -125,7 +125,7 @@ Result: **22/22 scenarios passed**. Left-button presses that reached the probe w
 | elevated | False |
 | topmost at start (setting false) | False |
 | topmost after ticking the box | True |
-| saved settings | {"schemaVersion":1,"hammer":{"holdMs":310},"antiAfk":{"key":"c","count":"2","gapMs":"500","periodSeconds":"180"},"mortar":{"position":"78.49 71.84"},"window":{"alwaysOnTop":true,"left":100,"top":80,"selectedTab":2}} |
+| saved settings | {"schemaVersion":2,"hammer":{"holdMs":310},"antiAfk":{"key":"c","count":"2","gapMs":"500","periodSeconds":"180"},"mortar":{"position":"78.49 71.84"},"magnifier":{"zoom":2},"window":{"alwaysOnTop":true,"left":100,"top":80,"selectedTab":2}} |
 | topmost after relaunch | True |
 | window position before close / after relaunch | (150,120) / (150,120) |
 | mortar position after relaunch | 78.49 71.84 |
@@ -137,4 +137,32 @@ Result: **22/22 scenarios passed**. Left-button presses that reached the probe w
 | **result** | PASS |
 | window appeared | True |
 | settings.json.bad kept | True |
+
+## Stopping one feature leaves the other running
+
+| | C# |
+|---|---|
+| **result** | PASS |
+| after 停止敲锤: mouse downs / anti-AFK presses | 0 / 4 |
+| after 停止防挂机: anti-AFK presses / mouse downs | 0 / 7 |
+
+## Magnifier (F10): centred, click-through, no focus steal, no recursion
+
+| | C# |
+|---|---|
+| **result** | PASS |
+| stripe width without lens px | 12.0 |
+| lens ex-styles | topmost=True click-through=True layered=True no-activate=True toolwindow(no taskbar)=True |
+| lens rect | (980,520)-(1580,920) |
+| monitor centre | (1280,720) |
+| stripe width with lens at 2.0x px | 24.0 |
+| stripes at exactly 2x width | 100% |
+| click at centre reached the window under the lens | True |
+| WardogsTool CPU with lens on (% of machine) | 0.23 |
+| zoom items | 1.5, 2, 2.5, 3, 4 |
+| stripe width with lens at 4.0x px | 48.0 |
+| status line | Magnifier: ON   ·   Zoom: 4.0x   ·   \\.\DISPLAY1 · 2560×1440 |
+| lens visible 150 ms after F10 | False |
+| lens window after app exit | gone |
+| saved zoom | 4 |
 

@@ -119,4 +119,59 @@ internal static partial class Native
 
     [DllImport("kernel32.dll")]
     public static extern bool CloseHandle(nint handle);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    public static extern nint FindWindowW(string? className, string? windowName);
+
+    [DllImport("user32.dll")]
+    public static extern bool IsWindowVisible(nint hwnd);
+
+    [DllImport("user32.dll")]
+    public static extern int GetSystemMetrics(int index);
+
+    [DllImport("user32.dll")]
+    public static extern bool PostMessageW(nint hwnd, uint msg, nint wParam, nint lParam);
+
+    // GDI screen capture of one pixel row (CAPTUREBLT so layered windows such as the lens are included).
+    [DllImport("user32.dll")] public static extern nint GetDC(nint hwnd);
+    [DllImport("user32.dll")] public static extern int ReleaseDC(nint hwnd, nint dc);
+    [DllImport("gdi32.dll")] public static extern nint CreateCompatibleDC(nint dc);
+    [DllImport("gdi32.dll")] public static extern nint CreateCompatibleBitmap(nint dc, int w, int h);
+    [DllImport("gdi32.dll")] public static extern nint SelectObject(nint dc, nint obj);
+    [DllImport("gdi32.dll")] public static extern bool BitBlt(nint dst, int x, int y, int w, int h, nint src, int sx, int sy, uint rop);
+    [DllImport("gdi32.dll")] public static extern bool DeleteObject(nint obj);
+    [DllImport("gdi32.dll")] public static extern bool DeleteDC(nint dc);
+    [DllImport("gdi32.dll")] public static extern int GetDIBits(nint dc, nint bmp, uint start, uint lines, [Out] byte[] bits, ref BITMAPINFOHEADER info, uint usage);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct BITMAPINFOHEADER
+    {
+        public uint Size;
+        public int Width, Height;
+        public ushort Planes, BitCount;
+        public uint Compression, SizeImage;
+        public int XPelsPerMeter, YPelsPerMeter;
+        public uint ClrUsed, ClrImportant;
+    }
+
+    /// <summary>Brightness (0-255) of each pixel in one screen row.</summary>
+    public static byte[] CaptureRow(int x, int y, int width)
+    {
+        var screen = GetDC(0);
+        var mem = CreateCompatibleDC(screen);
+        var bmp = CreateCompatibleBitmap(screen, width, 1);
+        var old = SelectObject(mem, bmp);
+        BitBlt(mem, 0, 0, width, 1, screen, x, y, 0x00CC0020 /* SRCCOPY */ | 0x40000000 /* CAPTUREBLT */);
+        SelectObject(mem, old);
+        var info = new BITMAPINFOHEADER { Size = 40, Width = width, Height = -1, Planes = 1, BitCount = 32 };
+        var bits = new byte[width * 4];
+        GetDIBits(mem, bmp, 0, 1, bits, ref info, 0);
+        DeleteObject(bmp);
+        DeleteDC(mem);
+        ReleaseDC(0, screen);
+        var row = new byte[width];
+        for (var i = 0; i < width; i++)
+            row[i] = (byte)((bits[i * 4] + bits[i * 4 + 1] + bits[i * 4 + 2]) / 3);
+        return row;
+    }
 }

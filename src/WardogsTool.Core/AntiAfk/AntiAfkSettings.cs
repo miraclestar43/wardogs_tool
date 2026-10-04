@@ -60,7 +60,7 @@ public static class AntiAfkSettings
             error = RangeMessage;
             return false;
         }
-        if (!double.IsFinite(period))
+        if (!DoublePolyfills.IsFinite(period))
         {
             error = NonFinitePeriodMessage;
             return false;
@@ -73,7 +73,7 @@ public static class AntiAfkSettings
         }
         // Python: period_ms = int(period * 1000) — truncation toward zero; period * 1000 can overflow.
         var periodMsExact = Math.Truncate(period * 1000);
-        if (!double.IsFinite(periodMsExact) || periodMsExact > MaxPeriodMs)
+        if (!DoublePolyfills.IsFinite(periodMsExact) || periodMsExact > MaxPeriodMs)
         {
             error = PeriodTooLargeMessage;
             return false;

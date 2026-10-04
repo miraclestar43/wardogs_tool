@@ -25,7 +25,7 @@ public static class MortarCalculator
     {
         var dx = target.X - mortar.X;
         var dy = target.Y - mortar.Y;
-        var distance = double.Hypot(dx, dy) * MetersPerUnit;
+        var distance = DoublePolyfills.Hypot(dx, dy) * MetersPerUnit;
         // math.degrees(x) in CPython is x * (180 / pi).
         var bearing = PythonFloatMod(Math.Atan2(dx, dy) * (180.0 / Math.PI), 360);
         return (bearing, distance);
@@ -40,11 +40,11 @@ public static class MortarCalculator
     {
         solution = default;
         error = NonFiniteMessage;
-        if (!double.IsFinite(mortar.X) || !double.IsFinite(mortar.Y) || !double.IsFinite(target.X) || !double.IsFinite(target.Y))
+        if (!DoublePolyfills.IsFinite(mortar.X) || !DoublePolyfills.IsFinite(mortar.Y) || !DoublePolyfills.IsFinite(target.X) || !DoublePolyfills.IsFinite(target.Y))
             return false;
 
         var (bearing, distance) = Exact(mortar, target);
-        if (!double.IsFinite(bearing) || !double.IsFinite(distance))
+        if (!DoublePolyfills.IsFinite(bearing) || !DoublePolyfills.IsFinite(distance))
             return false;
         var range = Math.Floor(distance + 0.5);
         if (range >= long.MaxValue)
@@ -79,7 +79,7 @@ public static class MortarCalculator
         }
         else
         {
-            mod = Math.CopySign(0.0, m);
+            mod = DoublePolyfills.CopySign(0.0, m);
         }
         return mod;
     }

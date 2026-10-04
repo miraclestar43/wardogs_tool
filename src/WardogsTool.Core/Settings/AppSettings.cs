@@ -68,8 +68,8 @@ public sealed class AppSettings
         AntiAfk.GapMs ??= AntiAfkSettings.DefaultGapMs;
         AntiAfk.PeriodSeconds ??= AntiAfkSettings.DefaultPeriodSeconds;
         Mortar.Position ??= "";
-        if (Window.Left is { } l && !double.IsFinite(l)) Window.Left = null;
-        if (Window.Top is { } t && !double.IsFinite(t)) Window.Top = null;
+        if (Window.Left is { } l && !DoublePolyfills.IsFinite(l)) Window.Left = null;
+        if (Window.Top is { } t && !DoublePolyfills.IsFinite(t)) Window.Top = null;
         if (Window.SelectedTab < 0) Window.SelectedTab = 0;
         SchemaVersion = CurrentSchemaVersion;
         return this;
@@ -144,6 +144,10 @@ public sealed class SettingsStore
         System.IO.Directory.CreateDirectory(Directory);
         var temp = FilePath + ".tmp";
         File.WriteAllText(temp, JsonSerializer.Serialize(settings, SettingsJsonContext.Default.AppSettings));
-        File.Move(temp, FilePath, overwrite: true);
+        // File.Move(..., overwrite) is .NET Core 3.0+; File.Replace is the atomic equivalent here.
+        if (File.Exists(FilePath))
+            File.Replace(temp, FilePath, null);
+        else
+            File.Move(temp, FilePath);
     }
 }

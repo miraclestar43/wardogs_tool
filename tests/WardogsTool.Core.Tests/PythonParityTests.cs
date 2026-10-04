@@ -27,8 +27,14 @@ public class PythonParityTests
         "nan" => double.NaN,
         "inf" => double.PositiveInfinity,
         "-inf" => double.NegativeInfinity,
-        _ => double.Parse(s, CultureInfo.InvariantCulture),
+        _ => KeepZeroSign(double.Parse(s, CultureInfo.InvariantCulture), s),
     };
+
+    // .NET Framework's parsers return +0 for "-0.0"; Python's -0.0 must stay negative here, or the
+    // sign checks below would pass vacuously.
+    private static double KeepZeroSign(double value, string text) => value == 0 && text.StartsWith("-") ? -0.0 : value;
+
+    private static double Num(JsonElement e) => KeepZeroSign(e.GetDouble(), e.GetRawText());
 
     [Fact]
     public void Mortar_matches_python_for_every_recorded_case()
@@ -41,8 +47,8 @@ public class PythonParityTests
             count++;
             var m = c.GetProperty("mortar");
             var t = c.GetProperty("target");
-            var mortar = new MapPoint(m[0].GetDouble(), m[1].GetDouble());
-            var target = new MapPoint(t[0].GetDouble(), t[1].GetDouble());
+            var mortar = new MapPoint(Num(m[0]), Num(m[1]));
+            var target = new MapPoint(Num(t[0]), Num(t[1]));
             if (BigInteger.Parse(c.GetProperty("range").GetRawText()) > long.MaxValue)
             {
                 // Intended difference: Python prints the big integer; the port reports it.
@@ -94,7 +100,7 @@ public class PythonParityTests
             {
                 var x = DecodeFloat(c.GetProperty("x").GetString()!);
                 var y = DecodeFloat(c.GetProperty("y").GetString()!);
-                if (!ok || !p.X.Equals(x) || !p.Y.Equals(y) || double.IsNegative(p.X) != double.IsNegative(x))
+                if (!ok || !p.X.Equals(x) || !p.Y.Equals(y) || DoublePolyfills.IsNegative(p.X) != DoublePolyfills.IsNegative(x))
                     failures.Add($"{Show(input)}: got ok={ok} ({p.X:R}, {p.Y:R}) {error}, python ({x:R}, {y:R})");
             }
             else
@@ -130,7 +136,7 @@ public class PythonParityTests
             // then cannot handle (crash, or millions of after() calls). The port rejects them.
             string? expectedRejection = null;
             if (c.TryGetProperty("pythonSchedulerError", out _))
-                expectedRejection = PythonNumber.TryParseFloat(F("period"), out var p, out _) && double.IsFinite(p)
+                expectedRejection = PythonNumber.TryParseFloat(F("period"), out var p, out _) && DoublePolyfills.IsFinite(p)
                     ? AntiAfkSettings.PeriodTooLargeMessage
                     : AntiAfkSettings.NonFinitePeriodMessage;
             else if (c.GetProperty("ok").GetBoolean() && I("periodMs") > AntiAfkSettings.MaxPeriodMs)

@@ -142,11 +142,12 @@ internal sealed unsafe class MagnifierOverlay : IMagnifierOverlay
             var wc = new NativeMethods.WNDCLASSEXW
             {
                 Size = (uint)sizeof(NativeMethods.WNDCLASSEXW),
-                WndProc = (nint)(delegate* unmanaged<nint, uint, nint, nint, nint>)&HostWndProc,
+                // .NET Framework has no [UnmanagedCallersOnly]; a delegate kept alive in a static field instead.
+                WndProc = Marshal.GetFunctionPointerForDelegate(HostWndProcDelegate),
                 Instance = instance,
                 ClassName = _classNamePtr,
             };
-            if (NativeMethods.RegisterClassExW(wc) == 0 && Marshal.GetLastPInvokeError() != 1410 /* already registered */)
+            if (NativeMethods.RegisterClassExW(wc) == 0 && Marshal.GetLastWin32Error() != 1410 /* already registered */)
                 throw new System.ComponentModel.Win32Exception();
         }
 
@@ -172,7 +173,12 @@ internal sealed unsafe class MagnifierOverlay : IMagnifierOverlay
 
     // Ignore WM_CLOSE: only the app hides/destroys the lens (anything that closes "the process's
     // main window" from outside could otherwise pick this top-level window and leave a dangling handle).
-    [UnmanagedCallersOnly]
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+    private delegate nint WndProcDelegate(nint hwnd, uint msg, nint wParam, nint lParam);
+
+    // Static so the GC can never collect it while Windows still holds the function pointer.
+    private static readonly WndProcDelegate HostWndProcDelegate = HostWndProc;
+
     private static nint HostWndProc(nint hwnd, uint msg, nint wParam, nint lParam) =>
         msg == 0x0010 /* WM_CLOSE */ ? 0 : NativeMethods.DefWindowProcW(hwnd, msg, wParam, lParam);
 

@@ -30,7 +30,7 @@ public static class MortarText
         if (double.IsNaN(value)) return "nan";
         if (double.IsInfinity(value)) return value > 0 ? "inf" : "-inf";
 
-        var negative = double.IsNegative(value);
+        var negative = DoublePolyfills.IsNegative(value);
         var bits = BitConverter.DoubleToInt64Bits(Math.Abs(value));
         var exponentBits = (int)((bits >> 52) & 0x7FF);
         var fraction = bits & 0xF_FFFF_FFFF_FFFFL;
@@ -66,6 +66,8 @@ public static class MortarText
     {
         if (double.IsNaN(value)) return "nan";
         if (double.IsInfinity(value)) return value > 0 ? "inf" : "-inf";
+        // .NET Framework prints -0.0 as "0"; Python (and .NET Core 3.0+) print "-0".
+        if (value == 0) return DoublePolyfills.IsNegative(value) ? "-0" : "0";
         return value.ToString("G6", CultureInfo.InvariantCulture).Replace("E", "e");
     }
 }

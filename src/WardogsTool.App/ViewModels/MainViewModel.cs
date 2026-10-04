@@ -62,7 +62,7 @@ public sealed class MainViewModel : ObservableObject
         _afkPeriod = settings.AntiAfk.PeriodSeconds;
         _mortarPosition = settings.Mortar.Position;
         _alwaysOnTop = settings.Window.AlwaysOnTop;
-        _selectedTab = Math.Clamp(settings.Window.SelectedTab, 0, TabCount - 1);
+        _selectedTab = Math.Max(0, Math.Min(settings.Window.SelectedTab, TabCount - 1));
 
         StartHammerCommand = new RelayCommand(StartHammer);
         StartAfkCommand = new RelayCommand(StartAfk);

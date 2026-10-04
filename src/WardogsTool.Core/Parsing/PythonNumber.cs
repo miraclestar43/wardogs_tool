@@ -22,14 +22,13 @@ namespace WardogsTool.Core.Parsing;
 /// </remarks>
 public static partial class PythonNumber
 {
-    [GeneratedRegex(@"^[+-]?(?:(?:\d(?:_?\d)*)?\.\d(?:_?\d)*|\d(?:_?\d)*\.?)(?:[eE][+-]?\d(?:_?\d)*)?$")]
-    private static partial Regex FloatGrammar();
-
-    [GeneratedRegex(@"^[+-]?(?:inf|infinity|nan)$", RegexOptions.IgnoreCase)]
-    private static partial Regex FloatSpecial();
-
-    [GeneratedRegex(@"^[+-]?\d(?:_?\d)*$")]
-    private static partial Regex IntGrammar();
+    // [GeneratedRegex] is .NET 7+; plain cached Regex objects behave the same.
+    private static readonly Regex FloatGrammarRegex = new(@"^[+-]?(?:(?:\d(?:_?\d)*)?\.\d(?:_?\d)*|\d(?:_?\d)*\.?)(?:[eE][+-]?\d(?:_?\d)*)?$", RegexOptions.CultureInvariant);
+    private static readonly Regex FloatSpecialRegex = new(@"^[+-]?(?:inf|infinity|nan)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    private static readonly Regex IntGrammarRegex = new(@"^[+-]?\d(?:_?\d)*$", RegexOptions.CultureInvariant);
+    private static Regex FloatGrammar() => FloatGrammarRegex;
+    private static Regex FloatSpecial() => FloatSpecialRegex;
+    private static Regex IntGrammar() => IntGrammarRegex;
 
     /// <summary>Python's str.isspace() for a single UTF-16 code unit.</summary>
     public static bool IsPythonSpace(char c) => char.IsWhiteSpace(c) || (c >= '\x1c' && c <= '\x1f');
@@ -79,8 +78,18 @@ public static partial class PythonNumber
         if (!FloatGrammar().IsMatch(ascii))
             return false;
 
-        // .NET Core 3.0+ parses IEEE-correctly and returns ±Infinity on overflow, like CPython.
-        value = double.Parse(ascii.Replace("_", ""), NumberStyles.Float, CultureInfo.InvariantCulture);
+        // CPython returns ±inf on overflow; .NET Framework throws instead (.NET Core 3.0+ doesn't).
+        try
+        {
+            value = double.Parse(ascii.Replace("_", ""), NumberStyles.Float, CultureInfo.InvariantCulture);
+        }
+        catch (OverflowException)
+        {
+            value = ascii.StartsWith('-') ? double.NegativeInfinity : double.PositiveInfinity;
+        }
+        // .NET Framework parses "-0" / "-0.0" / "-1e-400" as +0; CPython keeps the sign.
+        if (value == 0 && ascii.StartsWith('-'))
+            value = -0.0;
         error = "";
         return true;
     }
@@ -108,16 +117,22 @@ public static partial class PythonNumber
     private static string? ToAsciiDigits(string text)
     {
         var sb = new StringBuilder(text.Length);
-        foreach (var rune in text.EnumerateRunes())
+        // By code point (System.Text.Rune is .NET Core 3.0+); the string/index overloads of
+        // CharUnicodeInfo handle surrogate pairs.
+        for (var i = 0; i < text.Length; i++)
         {
-            if (rune.IsBmp && IsPythonSpace((char)rune.Value))
+            var c = text[i];
+            var pair = char.IsHighSurrogate(c) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]);
+            if (!pair && IsPythonSpace(c))
                 sb.Append(' ');
-            else if (rune.IsAscii)
-                sb.Append((char)rune.Value);
-            else if (Rune.GetUnicodeCategory(rune) == UnicodeCategory.DecimalDigitNumber)
-                sb.Append((char)('0' + (int)Rune.GetNumericValue(rune)));
+            else if (!pair && c <= 127)
+                sb.Append(c);
+            else if (CharUnicodeInfo.GetUnicodeCategory(text, i) == UnicodeCategory.DecimalDigitNumber)
+                sb.Append((char)('0' + CharUnicodeInfo.GetDecimalDigitValue(text, i)));
             else
                 return null;
+            if (pair)
+                i++;
         }
         // Interior whitespace ("1 0") is not part of either grammar, so the regexes reject it.
         return sb.ToString().Trim(' ');
@@ -153,7 +168,7 @@ public static partial class PythonNumber
     {
         if (cp is >= 0xD800 and <= 0xDFFF)
             return false; // lone surrogate
-        return CharUnicodeInfo.GetUnicodeCategory(cp) switch
+        return CharUnicodeInfo.GetUnicodeCategory(char.ConvertFromUtf32(cp), 0) switch
         {
             UnicodeCategory.Control or UnicodeCategory.Format or UnicodeCategory.Surrogate or UnicodeCategory.PrivateUse
                 or UnicodeCategory.OtherNotAssigned or UnicodeCategory.LineSeparator or UnicodeCategory.ParagraphSeparator

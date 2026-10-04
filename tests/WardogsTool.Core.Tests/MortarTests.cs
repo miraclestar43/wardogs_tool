@@ -93,7 +93,7 @@ public class MortarTests
     {
         var s = Solve(0, 0, -0.0, 1);
         Assert.Equal(0, s.Direction);
-        Assert.False(double.IsNegative(s.BearingDegrees));
+        Assert.False(DoublePolyfills.IsNegative(s.BearingDegrees));
     }
 
     [Fact]
@@ -161,7 +161,7 @@ public class MortarTests
     {
         var r = MortarCalculator.PythonFloatMod(-0.0, 360);
         Assert.Equal(0.0, r);
-        Assert.False(double.IsNegative(r));
+        Assert.False(DoublePolyfills.IsNegative(r));
     }
 
     [Theory]

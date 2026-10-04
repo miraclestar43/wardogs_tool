@@ -3,7 +3,7 @@
   <PropertyGroup>
     <!-- WinExe: no console window. -->
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net48</TargetFramework>
     <RootNamespace>WardogsTool.App</RootNamespace>
     <AssemblyName>WardogsTool</AssemblyName>
     <UseWPF>true</UseWPF>

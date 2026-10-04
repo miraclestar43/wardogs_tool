@@ -2,9 +2,14 @@
 
   <!-- Game-independent logic. No Windows or WPF dependency: everything here runs in plain unit tests. -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net48</TargetFramework>
     <RootNamespace>WardogsTool.Core</RootNamespace>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- .NET Framework has no System.Text.Json; the NuGet package brings it (plus its dependencies). -->
+    <PackageReference Include="System.Text.Json" Version="10.0.0" />
+  </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="WardogsTool.Core.Tests" />

@@ -11,7 +11,7 @@ namespace WardogsTool.App.Platform.Windows;
 /// that Windows turns into SendInput, so the events the game sees are identical to the Python
 /// tool's (verified with a low-level hook by tools/WardogsTool.InputProbe).
 /// </remarks>
-internal static partial class NativeMethods
+internal static class NativeMethods
 {
     public const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
     public const uint MOUSEEVENTF_LEFTUP = 0x0004;
@@ -28,34 +28,34 @@ internal static partial class NativeMethods
 
     public const int ATTACH_PARENT_PROCESS = -1;
 
-    [LibraryImport("user32.dll")]
-    public static partial void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, nuint dwExtraInfo);
+    [DllImport("user32.dll")]
+    public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, nuint dwExtraInfo);
 
-    [LibraryImport("user32.dll")]
-    public static partial void keybd_event(byte bVk, byte bScan, uint dwFlags, nuint dwExtraInfo);
+    [DllImport("user32.dll")]
+    public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, nuint dwExtraInfo);
 
-    [LibraryImport("user32.dll")]
-    public static partial short VkKeyScanW(ushort ch); // WCHAR
+    [DllImport("user32.dll")]
+    public static extern short VkKeyScanW(ushort ch); // WCHAR
 
-    [LibraryImport("user32.dll")]
-    public static partial uint MapVirtualKeyW(uint uCode, uint uMapType);
+    [DllImport("user32.dll")]
+    public static extern uint MapVirtualKeyW(uint uCode, uint uMapType);
 
     public const uint CREATE_WAITABLE_TIMER_HIGH_RESOLUTION = 0x00000002;
     public const uint TIMER_ALL_ACCESS = 0x001F0003;
 
-    [LibraryImport("kernel32.dll", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
-    public static partial Microsoft.Win32.SafeHandles.SafeWaitHandle CreateWaitableTimerExW(nint attributes, string? name, uint flags, uint access);
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    public static extern Microsoft.Win32.SafeHandles.SafeWaitHandle CreateWaitableTimerExW(nint attributes, string? name, uint flags, uint access);
 
-    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static partial bool SetWaitableTimer(Microsoft.Win32.SafeHandles.SafeWaitHandle timer, ref long dueTime, int period,
+    public static extern bool SetWaitableTimer(Microsoft.Win32.SafeHandles.SafeWaitHandle timer, ref long dueTime, int period,
         nint completionRoutine, nint argToCompletionRoutine, [MarshalAs(UnmanagedType.Bool)] bool resume);
 
-    [LibraryImport("winmm.dll")]
-    public static partial uint timeBeginPeriod(uint uPeriod);
+    [DllImport("winmm.dll")]
+    public static extern uint timeBeginPeriod(uint uPeriod);
 
-    [LibraryImport("winmm.dll")]
-    public static partial uint timeEndPeriod(uint uPeriod);
+    [DllImport("winmm.dll")]
+    public static extern uint timeEndPeriod(uint uPeriod);
 
     [StructLayout(LayoutKind.Sequential)]
     public struct RAWINPUTDEVICE
@@ -86,16 +86,16 @@ internal static partial class NativeMethods
         public uint ExtraInformation;
     }
 
-    [LibraryImport("user32.dll", SetLastError = true)]
+    [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static partial bool RegisterRawInputDevices([In] RAWINPUTDEVICE[] devices, uint count, uint size);
+    public static extern bool RegisterRawInputDevices([In] RAWINPUTDEVICE[] devices, uint count, uint size);
 
-    [LibraryImport("user32.dll")]
-    public static unsafe partial uint GetRawInputData(nint rawInput, uint command, void* data, ref uint size, uint headerSize);
+    [DllImport("user32.dll")]
+    public static extern unsafe uint GetRawInputData(nint rawInput, uint command, void* data, ref uint size, uint headerSize);
 
-    [LibraryImport("kernel32.dll")]
+    [DllImport("kernel32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static partial bool AttachConsole(int processId);
+    public static extern bool AttachConsole(int processId);
 
     // ---------- Magnifier: documented Windows Magnification API + a plain Win32 host window ----------
 
@@ -157,70 +157,70 @@ internal static partial class NativeMethods
         public nint IconSmall;
     }
 
-    [LibraryImport("Magnification.dll")]
+    [DllImport("Magnification.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static partial bool MagInitialize();
+    public static extern bool MagInitialize();
 
-    [LibraryImport("Magnification.dll")]
+    [DllImport("Magnification.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static partial bool MagUninitialize();
+    public static extern bool MagUninitialize();
 
-    [LibraryImport("Magnification.dll")]
+    [DllImport("Magnification.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static partial bool MagSetWindowSource(nint hwnd, RECT rect);
+    public static extern bool MagSetWindowSource(nint hwnd, RECT rect);
 
-    [LibraryImport("Magnification.dll")]
+    [DllImport("Magnification.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static unsafe partial bool MagSetWindowTransform(nint hwnd, MAGTRANSFORM* transform);
+    public static extern unsafe bool MagSetWindowTransform(nint hwnd, MAGTRANSFORM* transform);
 
-    [LibraryImport("Magnification.dll")]
+    [DllImport("Magnification.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static unsafe partial bool MagSetWindowFilterList(nint hwnd, uint filterMode, int count, nint* windows);
+    public static extern unsafe bool MagSetWindowFilterList(nint hwnd, uint filterMode, int count, nint* windows);
 
-    [LibraryImport("user32.dll", SetLastError = true)]
-    public static partial ushort RegisterClassExW(in WNDCLASSEXW windowClass);
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern ushort RegisterClassExW(in WNDCLASSEXW windowClass);
 
-    [LibraryImport("user32.dll", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static partial bool UnregisterClassW(string className, nint instance);
+    public static extern bool UnregisterClassW(string className, nint instance);
 
-    [LibraryImport("user32.dll", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
-    public static partial nint CreateWindowExW(uint exStyle, string className, string windowName, uint style,
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    public static extern nint CreateWindowExW(uint exStyle, string className, string windowName, uint style,
         int x, int y, int width, int height, nint parent, nint menu, nint instance, nint param);
 
-    [LibraryImport("user32.dll")]
+    [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static partial bool DestroyWindow(nint hwnd);
+    public static extern bool DestroyWindow(nint hwnd);
 
-    [LibraryImport("user32.dll")]
-    public static partial nint DefWindowProcW(nint hwnd, uint msg, nint wParam, nint lParam);
+    [DllImport("user32.dll")]
+    public static extern nint DefWindowProcW(nint hwnd, uint msg, nint wParam, nint lParam);
 
-    [LibraryImport("user32.dll")]
+    [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static partial bool ShowWindow(nint hwnd, int cmd);
+    public static extern bool ShowWindow(nint hwnd, int cmd);
 
-    [LibraryImport("user32.dll")]
+    [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static partial bool SetWindowPos(nint hwnd, nint insertAfter, int x, int y, int cx, int cy, uint flags);
+    public static extern bool SetWindowPos(nint hwnd, nint insertAfter, int x, int y, int cx, int cy, uint flags);
 
-    [LibraryImport("user32.dll")]
+    [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static partial bool SetLayeredWindowAttributes(nint hwnd, uint colorKey, byte alpha, uint flags);
+    public static extern bool SetLayeredWindowAttributes(nint hwnd, uint colorKey, byte alpha, uint flags);
 
-    [LibraryImport("user32.dll")]
+    [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static partial bool InvalidateRect(nint hwnd, nint rect, [MarshalAs(UnmanagedType.Bool)] bool erase);
+    public static extern bool InvalidateRect(nint hwnd, nint rect, [MarshalAs(UnmanagedType.Bool)] bool erase);
 
-    [LibraryImport("user32.dll")]
-    public static partial nint GetForegroundWindow();
+    [DllImport("user32.dll")]
+    public static extern nint GetForegroundWindow();
 
-    [LibraryImport("user32.dll")]
-    public static partial nint MonitorFromWindow(nint hwnd, uint flags);
+    [DllImport("user32.dll")]
+    public static extern nint MonitorFromWindow(nint hwnd, uint flags);
 
-    [LibraryImport("user32.dll", EntryPoint = "GetMonitorInfoW")]
+    [DllImport("user32.dll", EntryPoint = "GetMonitorInfoW")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static partial bool GetMonitorInfo(nint monitor, ref MONITORINFOEXW info);
+    public static extern bool GetMonitorInfo(nint monitor, ref MONITORINFOEXW info);
 
-    [LibraryImport("kernel32.dll", StringMarshalling = StringMarshalling.Utf16)]
-    public static partial nint GetModuleHandleW(string? moduleName);
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    public static extern nint GetModuleHandleW(string? moduleName);
 }

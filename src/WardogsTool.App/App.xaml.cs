@@ -115,7 +115,7 @@ internal static class SelfTest
             MortarCalculator.TrySolve(new(mx, my), new(tx, ty), out var s, out _);
             var ok = s.Direction == deg && s.Range == rng;
             failed |= !ok;
-            Console.WriteLine(string.Create(CultureInfo.InvariantCulture,
+            Console.WriteLine(FormattableString.Invariant(
                 $"{(ok ? "OK " : "FAIL")} ({mx:R}, {my:R}) -> ({tx:R}, {ty:R}): {s.Direction:000}°, {s.Range} m (期望 {deg:000}°, {rng} m)"));
         }
         Console.WriteLine(failed ? "失败" : "全部通过");

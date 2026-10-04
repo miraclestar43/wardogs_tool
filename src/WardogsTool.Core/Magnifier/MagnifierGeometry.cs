@@ -46,7 +46,7 @@ public static class MagnifierGeometry
 
     /// <summary>Snaps a stored zoom to the nearest offered choice (bad values → 2.0x).</summary>
     public static double NormalizeZoom(double zoom) =>
-        double.IsFinite(zoom) ? ZoomChoices.MinBy(z => Math.Abs(z - zoom)) : DefaultZoom;
+        DoublePolyfills.IsFinite(zoom) ? ZoomChoices.MinBy(z => Math.Abs(z - zoom)) : DefaultZoom;
 
     /// <summary>
     /// Lens centred on <paramref name="monitor"/> (shrunk to fit a smaller monitor), and the source
@@ -57,7 +57,7 @@ public static class MagnifierGeometry
     {
         if (monitor.Width <= 0 || monitor.Height <= 0)
             throw new ArgumentException("Monitor rectangle is empty.", nameof(monitor));
-        if (!double.IsFinite(zoom) || zoom < 1)
+        if (!DoublePolyfills.IsFinite(zoom) || zoom < 1)
             throw new ArgumentOutOfRangeException(nameof(zoom), zoom, "Zoom must be at least 1.");
 
         var w = Math.Min(lensWidth, monitor.Width);

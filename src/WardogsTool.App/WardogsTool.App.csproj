@@ -3,14 +3,13 @@
   <PropertyGroup>
     <!-- WinExe: no console window. -->
     <OutputType>WinExe</OutputType>
+    <!-- .NET Framework 4.8 is part of Windows 10 1903+ and Windows 11: nothing to install. -->
     <TargetFramework>net48</TargetFramework>
     <RootNamespace>WardogsTool.App</RootNamespace>
     <AssemblyName>WardogsTool</AssemblyName>
     <UseWPF>true</UseWPF>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <!-- The UI is Chinese/English only; skip the framework's other satellite resource folders. -->
-    <SatelliteResourceLanguages>zh-Hans;en</SatelliteResourceLanguages>
   </PropertyGroup>
 
   <ItemGroup>

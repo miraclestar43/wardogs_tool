@@ -27,6 +27,7 @@ Hotkeys are global and only observed, never swallowed: the game still receives F
 ---
 
 ## 1. 快速敲锤 · Fast hammer（F9）
+<img width="588" height="813" alt="c78adc6d2cf9fdb4c7dc6c97f261552a" src="https://github.com/user-attachments/assets/eb40052a-c441-466a-9c37-2e0e6b0f37ec" />
 
 主功能。自动循环敲锤：按住左键 → 松开 → 40 ms 后再敲。
 The main feature — hold, release, hit again, automatically:
@@ -53,6 +54,7 @@ mouse down ──hold──▶ mouse up ──40 ms──▶ repeat
 定时自动按键，避免挂机被踢。默认每 180 秒按 2 下 `c`，间隔 500 ms，每下按住 50 ms。按键、次数、间隔、周期可在「防挂机」页修改。按 F8 后第一次按键在一个周期之后，页面显示倒计时。
 
 Presses a key on a timer so you are not kicked for being idle. Default: `c` twice, 500 ms apart, every 180 s, each held 50 ms. The first press comes one full period after F8.
+<img width="591" height="734" alt="image" src="https://github.com/user-attachments/assets/71adaa7f-0363-422d-9c99-22b62bd741c3" />
 
 F8 和 F9 各自启动，可以同时运行。任何「停止」按钮和 **Esc** 都是全部停止（敲锤、防挂机、放大镜）。
 F8 and F9 start independently and can run together. Every Stop button and **Esc** stop everything (hammer, anti-AFK, magnifier).
@@ -64,6 +66,7 @@ Turns WARDOGS map coordinates into the mortar's firing **direction (bearing)** a
 
 在「迫击炮」页：先输入一次炮位（如 `100.32 59.45`，回车），再逐个输入目标（`104.39 63.59` 或 `104.39, 63.59`，回车）：
 On the **Mortar** tab: type the mortar position once, then each target:
+<img width="604" height="899" alt="image" src="https://github.com/user-attachments/assets/31e607e1-3583-4f3f-a2fe-c7aae2715437" />
 
 ```
 DIRECTION: 045°
@@ -86,6 +89,7 @@ bearing = atan2(dx, dy) in degrees, normalised to [0, 360)
 ## 4. 放大镜 / 倍镜 · Magnifier（F10）
 
 给没有倍镜的武器用，相当于一个屏幕中心的外置放大倍镜：在屏幕中心显示一个 600×400 的放大镜头。**F10 每按一次切换一档：关 → 2.0x → 3.0x → 4.0x → 关**，循环往复。「放大镜」页还可以选 1.5x 和 2.5x，再用「开 / 关」按钮打开。镜头在游戏所在显示器的中心，鼠标可以穿透，不抢焦点，不出现在任务栏，不画准星。**Esc** 也会立即关闭它。
+<img width="586" height="731" alt="dca941bc92a476c15d5c1972fe7b11b2" src="https://github.com/user-attachments/assets/6ddc807c-68ab-4132-b800-5bfd92ff8f26" />
 
 For weapons without optics: a 600×400 lens at the centre of the game's monitor. **Each F10 press advances one step: OFF → 2.0x → 3.0x → 4.0x → OFF.** The Magnifier tab also offers 1.5x and 2.5x with its on/off button. Click-through, never takes focus, no taskbar entry, no crosshair drawn. **Esc** removes it immediately too.
 

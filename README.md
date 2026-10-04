@@ -66,7 +66,8 @@ Turns WARDOGS map coordinates into the mortar's firing **direction (bearing)** a
 
 在「迫击炮」页直接照抄地图上显示的坐标：先输入一次炮位（如 `x100.32, y59.45`，回车），再逐个输入目标（如 `x104.39, y63.59`，回车）：
 On the **Mortar** tab, type coordinates exactly as the WARDOGS map shows them: the mortar position once (e.g. `x100.32, y59.45`), then each target (e.g. `x104.39, y63.59`):
-<img width="604" height="899" alt="image" src="https://github.com/user-attachments/assets/31e607e1-3583-4f3f-a2fe-c7aae2715437" />
+<img width="572" height="831" alt="image" src="https://github.com/user-attachments/assets/d2b59f61-b952-4fc0-a74b-371d200dc837" />
+
 
 ```
 DIRECTION: 045°

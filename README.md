@@ -9,7 +9,7 @@ WardogsTool takes the clicking out of construction: press **F9** and it hammers 
 
 | 功能 Feature | 快捷键 Hotkey |
 |---|---|
-| **快速敲锤 Fast hammer**（土木 / 建造 / 工兵 builder & engineer） | **F9** |
+| **快速敲锤 Fast hammer**（土木 / 建造 / 工兵）：关 → 大锤 510 → 小/中锤 310 → 关 · OFF → Large → Small/Medium → OFF | **F9** |
 | 防挂机 Anti-AFK | F8 |
 | 放大镜 Magnifier：关 → 2.0x → 3.0x → 4.0x → 关 OFF → 2x → 3x → 4x → OFF | F10 |
 | 迫击炮计算 Mortar calculator | 「迫击炮」页 Mortar tab |
@@ -36,8 +36,8 @@ mouse down ──hold──▶ mouse up ──40 ms──▶ repeat
 | **310 ms** | 小锤 / 中锤 Small / medium hammer |
 | **510 ms** | 大锤 Large hammer |
 
-- 在「敲锤」页选好档位，进游戏按 **F9** 开始；按 **Esc** 或「停止」按钮全部停止。第一下立即敲下，页面上的 **RUNNING / STOPPED** 标志显示状态。
-  Pick the preset on the **Hammer** tab, press **F9** in game; **Esc** or the Stop button stops everything. The first hit is immediate.
+- **F9 每按一次切换一档：关 → 大锤 510 ms → 小/中锤 310 ms → 关**，按住不放只算一次。换档时先松开左键，再按新的节奏开始。「敲锤」页高亮当前档位，底部状态栏也一直显示，例如 `运行中   F9 敲锤：大锤 510 ms`。**Esc** 不论在哪一档都立即回到「关」（同时全部停止）。也可以用页面上的单选框 + 「开始所选」按钮启动。第一下立即敲下。
+  **Each F9 press advances one step: OFF → Large 510 ms → Small/Medium 310 ms → OFF**; holding the key counts once. Switching releases the left button before the new timing starts. The Hammer tab highlights the current step and the status bar always shows it. **Esc** returns to OFF at once from any step (and stops everything). The radio buttons + START button also start a preset. The first hit is immediate.
 - 停止、按 F12 或关闭窗口时一定会松开左键，不会让鼠标卡在按下状态。工具只松开它自己按下的键。
   Stopping, F12 or closing the window always releases the left button; the tool only releases a button it pressed itself.
 - 工具窗口最小化或被游戏挡住时，敲击节奏不变。

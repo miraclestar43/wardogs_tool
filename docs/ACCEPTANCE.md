@@ -4,8 +4,8 @@ Run these with the published `dist\WardogsTool\WardogsTool.exe` (keep its three 
 
 ## Hammer · 敲锤
 
-- [ ] **(in game)** F9 starts hammering while WARDOGS is focused; the badge turns green RUNNING.
-- [ ] **(in game)** A second F9 while running does nothing.
+- [ ] **(in game)** F9 with WARDOGS focused: 1st press → **大锤 510 ms** (green badge `RUNNING · 大锤 510 ms`, the 大锤 510 step highlighted, status bar `运行中   F9 敲锤：大锤 510 ms`); 2nd press → **小/中锤 310 ms**; 3rd press → **OFF** (`已停止   F9 敲锤：关…`).
+- [ ] **(in game)** Holding F9 down advances only one step. Switching 510 → 310 in the middle of a hold releases the button before the faster rhythm starts (no stuck or doubled click). Esc from 510 or from 310 returns to OFF at once; the next F9 starts again at 510.
 - [ ] **(in game)** 310 ms builds with the small/medium hammer, 510 ms with the large hammer, at the same rate as the Python tool on the same structure.
 - [ ] **(in game)** Same rate with the tool window behind the game or minimized.
 
@@ -22,7 +22,7 @@ Every Stop is a global stop. Start hammer (F9), anti-AFK (F8) and the magnifier 
 - [ ] **(in game)** Esc in the middle of a 510 ms hold releases the button at once (you can look/click normally).
 - [ ] The Hammer tab's **停止 STOP** button does exactly the same as Esc (everything stops, lens hidden).
 - [ ] The Anti-AFK tab's **停止 STOP** button does exactly the same as Esc.
-- [ ] After any stop the status line reads `已停止   F9 敲锤 | F8 防挂机 | F10 放大镜 | Esc 全部停止 | F12 退出`.
+- [ ] After any stop the status line reads `已停止   F9 敲锤：关（→ 大锤 → 小/中锤）| F8 防挂机 | F10 放大镜 | Esc 全部停止 | F12 退出`.
 - [ ] **(in game)** **F12** — the same cleanup, then the tool exits; no lens, no stuck button. Closing the window with ✕ behaves the same.
 
 ## Hotkeys · 快捷键

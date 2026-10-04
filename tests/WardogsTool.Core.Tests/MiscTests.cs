@@ -67,7 +67,8 @@ public class SettingsStoreTests : IDisposable
     {
         var (s, warning) = new SettingsStore(_dir).Load();
         Assert.Null(warning);
-        Assert.Equal(1, s.SchemaVersion);
+        Assert.Equal(2, s.SchemaVersion);
+        Assert.Equal(2.0, s.Magnifier.Zoom);
         Assert.Equal(310, s.Hammer.HoldMs);
         Assert.Equal(("c", "2", "500", "180"), (s.AntiAfk.Key, s.AntiAfk.Count, s.AntiAfk.GapMs, s.AntiAfk.PeriodSeconds));
         Assert.Equal("", s.Mortar.Position);
@@ -100,7 +101,44 @@ public class SettingsStoreTests : IDisposable
         Assert.Equal(12.5, loaded.Window.Left);
         Assert.Equal(-3, loaded.Window.Top);
         Assert.Equal(2, loaded.Window.SelectedTab);
-        Assert.Contains("\"schemaVersion\": 1", File.ReadAllText(store.FilePath));
+        Assert.Contains("\"schemaVersion\": 2", File.ReadAllText(store.FilePath));
+    }
+
+    [Fact]
+    public void Magnifier_zoom_round_trips_and_snaps()
+    {
+        var store = new SettingsStore(_dir);
+        var s = new AppSettings();
+        s.Magnifier.Zoom = 3.0;
+        store.Save(s);
+        Assert.Equal(3.0, store.Load().Settings.Magnifier.Zoom);
+
+        File.WriteAllText(store.FilePath, "{\"schemaVersion\":2,\"magnifier\":{\"zoom\":7.3}}");
+        Assert.Equal(4.0, store.Load().Settings.Magnifier.Zoom);
+    }
+
+    [Fact]
+    public void Version_1_file_loads_with_the_default_zoom()
+    {
+        var store = new SettingsStore(_dir);
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(store.FilePath, "{\"schemaVersion\":1,\"hammer\":{\"holdMs\":510},\"mortar\":{\"position\":\"1 2\"}}");
+        var (s, warning) = store.Load();
+        Assert.Null(warning);
+        Assert.Equal(510, s.Hammer.HoldMs);
+        Assert.Equal("1 2", s.Mortar.Position);
+        Assert.Equal(2.0, s.Magnifier.Zoom);
+        Assert.Equal(2, s.SchemaVersion);
+    }
+
+    [Fact]
+    public void Running_state_is_not_persisted()
+    {
+        var store = new SettingsStore(_dir);
+        store.Save(new AppSettings());
+        var json = File.ReadAllText(store.FilePath);
+        Assert.DoesNotContain("running", json, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("isOn", json, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

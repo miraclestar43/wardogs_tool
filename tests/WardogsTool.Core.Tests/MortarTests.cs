@@ -53,6 +53,49 @@ public class MortarTests
         }
     }
 
+    // One target in each quadrant around the mortar (NE, SE, SW, NW), off the diagonals.
+    [Theory]
+    [InlineData(1, 3, 18)]     // NE: atan2(1, 3)  = 18.43°
+    [InlineData(3, -1, 108)]   // SE: 90 + 18.43
+    [InlineData(-1, -3, 198)]  // SW: 180 + 18.43
+    [InlineData(-3, 1, 288)]   // NW: 270 + 18.43
+    public void Four_quadrants(double dx, double dy, int expected)
+    {
+        Assert.Equal(expected, Solve(50, 50, 50 + dx, 50 + dy).Direction);
+    }
+
+    [Fact]
+    public void Boundary_359_49_stays_359_and_359_50_wraps_to_000()
+    {
+        static MortarSolution At(double degrees)
+        {
+            var a = degrees * Math.PI / 180;
+            return Solve(0, 0, 10 * Math.Sin(a), 10 * Math.Cos(a));
+        }
+        Assert.Equal(359, At(359.49).Direction);
+        Assert.Equal(0, At(359.51).Direction);
+        Assert.Equal(0, MortarCalculator.RoundDirection(359.50));
+        Assert.Equal(359, MortarCalculator.RoundDirection(359.49));
+    }
+
+    [Fact]
+    public void Scientific_notation_coordinates()
+    {
+        Assert.True(CoordinateParser.TryParse("1e2 5E1", out var mortar, out _));
+        Assert.True(CoordinateParser.TryParse("1.0e2, 5.3e1", out var target, out _));
+        Assert.True(MortarCalculator.TrySolve(mortar, target, out var s, out _));
+        Assert.Equal(0, s.Direction);
+        Assert.Equal(300, s.Range);
+    }
+
+    [Fact]
+    public void Negative_zero_target_is_north_not_negative()
+    {
+        var s = Solve(0, 0, -0.0, 1);
+        Assert.Equal(0, s.Direction);
+        Assert.False(double.IsNegative(s.BearingDegrees));
+    }
+
     [Fact]
     public void One_coordinate_unit_is_100_metres()
     {

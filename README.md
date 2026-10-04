@@ -54,7 +54,9 @@ mouse down ──hold──▶ mouse up ──40 ms──▶ repeat
 定时自动按键，避免挂机被踢。默认每 180 秒按 2 下 `c`，间隔 500 ms，每下按住 50 ms。按键、次数、间隔、周期可在「防挂机」页修改。按 F8 后第一次按键在一个周期之后，页面显示倒计时。
 
 Presses a key on a timer so you are not kicked for being idle. Default: `c` twice, 500 ms apart, every 180 s, each held 50 ms. The first press comes one full period after F8.
+
 <img width="591" height="734" alt="image" src="https://github.com/user-attachments/assets/71adaa7f-0363-422d-9c99-22b62bd741c3" />
+
 
 F8 和 F9 各自启动，可以同时运行。任何「停止」按钮和 **Esc** 都是全部停止（敲锤、防挂机、放大镜）。
 F8 and F9 start independently and can run together. Every Stop button and **Esc** stop everything (hammer, anti-AFK, magnifier).
@@ -64,10 +66,10 @@ F8 and F9 start independently and can run together. Every Stop button and **Esc*
 用战狗地图上的坐标算出迫击炮要打的**方向（方位角）**和**距离**，不用手算。
 Turns WARDOGS map coordinates into the mortar's firing **direction (bearing)** and **range** — no mental maths.
 
-在「迫击炮」页直接照抄地图上显示的坐标：先输入一次炮位（如 `x100.32, y59.45`，回车），再逐个输入目标（如 `x104.39, y63.59`，回车）：
-On the **Mortar** tab, type coordinates exactly as the WARDOGS map shows them: the mortar position once (e.g. `x100.32, y59.45`), then each target (e.g. `x104.39, y63.59`):
 <img width="572" height="831" alt="image" src="https://github.com/user-attachments/assets/d2b59f61-b952-4fc0-a74b-371d200dc837" />
 
+在「迫击炮」页直接照抄地图上显示的坐标：先输入一次炮位（如 `x100.32, y59.45`，回车），再逐个输入目标（如 `x104.39, y63.59`，回车）：
+On the **Mortar** tab, type coordinates exactly as the WARDOGS map shows them: the mortar position once (e.g. `x100.32, y59.45`), then each target (e.g. `x104.39, y63.59`):
 
 ```
 DIRECTION: 045°
@@ -102,9 +104,10 @@ bearing = atan2(dx, dy) in degrees, normalised to [0, 360)
 ## 4. 放大镜 / 倍镜 · Magnifier（F10）
 
 给没有倍镜的武器用，相当于一个屏幕中心的外置放大倍镜：在屏幕中心显示一个 600×400 的放大镜头。**F10 每按一次切换一档：关 → 2.0x → 3.0x → 4.0x → 关**，循环往复。「放大镜」页还可以选 1.5x 和 2.5x，再用「开 / 关」按钮打开。镜头在游戏所在显示器的中心，鼠标可以穿透，不抢焦点，不出现在任务栏，不画准星。**Esc** 也会立即关闭它。
-<img width="586" height="731" alt="dca941bc92a476c15d5c1972fe7b11b2" src="https://github.com/user-attachments/assets/6ddc807c-68ab-4132-b800-5bfd92ff8f26" />
 
 For weapons without optics: a 600×400 lens at the centre of the game's monitor. **Each F10 press advances one step: OFF → 2.0x → 3.0x → 4.0x → OFF.** The Magnifier tab also offers 1.5x and 2.5x with its on/off button. Click-through, never takes focus, no taskbar entry, no crosshair drawn. **Esc** removes it immediately too.
+
+<img width="586" height="731" alt="dca941bc92a476c15d5c1972fe7b11b2" src="https://github.com/user-attachments/assets/6ddc807c-68ab-4132-b800-5bfd92ff8f26" />
 
 放大镜使用 Windows 自带的放大 API（Magnification API），只放大屏幕上已经显示出来的画面。请用 **无边框窗口** 模式运行游戏；独占全屏下 Windows 无法合成叠加窗口。
 It uses the documented Windows Magnification API and only enlarges pixels already on screen. Run the game in **borderless windowed** mode; exclusive fullscreen cannot be overlaid.

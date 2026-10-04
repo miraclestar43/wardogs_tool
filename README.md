@@ -1,11 +1,13 @@
 # WARDOGS Tool · 战狗土木 / 建造辅助工具
 
-**战狗（WARDOGS）土木、建造辅助：快速敲锤，附带防挂机、迫击炮计算和屏幕中心放大镜。**
-**Fast hammering for building in WARDOGS, plus anti-AFK, a mortar calculator and a centre-screen magnifier.**
+**战狗（WARDOGS）土木、建造辅助工具：快速敲锤，附带迫击炮计算器（方向 / 距离）、屏幕中心放大镜（倍镜）和防挂机。**
+**Fast hammering for building in WARDOGS, plus a mortar calculator, a centre-screen magnifier (zoom) and anti-AFK.**
 
 做工兵、修建工事、盖建筑时不用再狂点鼠标：按 **F9** 自动敲锤（速敲 / 光速敲锤），小锤、中锤、大锤各有合适的按住时长。整个程序不到 100 KB，双击 `WardogsTool.exe` 即用：Windows 10 1903 及以上 / Windows 11 自带所需的运行环境，不需要另外安装 Python 或 .NET，不需要管理员权限。
 
 WardogsTool takes the clicking out of construction: press **F9** and it hammers for you, with the right hold time for small, medium and large hammers. The whole tool is under 100 KB; double-click `WardogsTool.exe`. Windows 10 1903+ and Windows 11 already include what it needs — no Python, no separate .NET install, no administrator rights.
+
+**关键词 Keywords：** 战狗 · WARDOGS · 战狗工具 · 土木 · 建造 · 工兵 · 修建 · 敲锤 · 快速敲锤 · 自动敲锤 · 速敲 · 光速敲锤 · 大锤 · 中锤 · 小锤 · 迫击炮 · 迫击炮计算 · 迫击炮计算器 · 迫击炮方向 · 迫击炮距离 · 方位角 · 坐标计算 · 放大镜 · 倍镜 · 屏幕放大 · 中心放大 · 防挂机 · fast hammer · auto hammer · mortar calculator · magnifier · zoom · anti-AFK
 
 | 功能 Feature | 快捷键 Hotkey |
 |---|---|
@@ -52,7 +54,10 @@ Presses a key on a timer so you are not kicked for being idle. Default: `c` twic
 F8 和 F9 各自启动，可以同时运行。任何「停止」按钮和 **Esc** 都是全部停止（敲锤、防挂机、放大镜）。
 F8 and F9 start independently and can run together. Every Stop button and **Esc** stop everything (hammer, anti-AFK, magnifier).
 
-## 3. 迫击炮计算 · Mortar calculator
+## 3. 迫击炮计算器 · Mortar calculator（方向 / 距离 / 坐标计算）
+
+用战狗地图上的坐标算出迫击炮要打的**方向（方位角）**和**距离**，不用手算。
+Turns WARDOGS map coordinates into the mortar's firing **direction (bearing)** and **range** — no mental maths.
 
 在「迫击炮」页：先输入一次炮位（如 `100.32 59.45`，回车），再逐个输入目标（`104.39 63.59` 或 `104.39, 63.59`，回车）：
 On the **Mortar** tab: type the mortar position once, then each target:
@@ -75,9 +80,9 @@ range   = sqrt(dx² + dy²) × 100
 bearing = atan2(dx, dy) in degrees, normalised to [0, 360)
 ```
 
-## 4. 放大镜 · Magnifier（F10）
+## 4. 放大镜 / 倍镜 · Magnifier（F10）
 
-给没有倍镜的武器用：在屏幕中心显示一个 600×400 的放大镜头。**F10 每按一次切换一档：关 → 2.0x → 3.0x → 4.0x → 关**，循环往复。「放大镜」页还可以选 1.5x 和 2.5x，再用「开 / 关」按钮打开。镜头在游戏所在显示器的中心，鼠标可以穿透，不抢焦点，不出现在任务栏，不画准星。**Esc** 也会立即关闭它。
+给没有倍镜的武器用，相当于一个屏幕中心的外置放大倍镜：在屏幕中心显示一个 600×400 的放大镜头。**F10 每按一次切换一档：关 → 2.0x → 3.0x → 4.0x → 关**，循环往复。「放大镜」页还可以选 1.5x 和 2.5x，再用「开 / 关」按钮打开。镜头在游戏所在显示器的中心，鼠标可以穿透，不抢焦点，不出现在任务栏，不画准星。**Esc** 也会立即关闭它。
 
 For weapons without optics: a 600×400 lens at the centre of the game's monitor. **Each F10 press advances one step: OFF → 2.0x → 3.0x → 4.0x → OFF.** The Magnifier tab also offers 1.5x and 2.5x with its on/off button. Click-through, never takes focus, no taskbar entry, no crosshair drawn. **Esc** removes it immediately too.
 

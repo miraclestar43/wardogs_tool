@@ -12,6 +12,9 @@ internal sealed record TargetSettings(int HoldMs = 310, string Key = "c", string
 internal interface ITarget
 {
     string Name { get; }
+
+    /// <summary>True when F9 cycles OFF → 510 → 310 → OFF instead of starting the selected preset.</summary>
+    bool F9Cycles { get; }
     Process Launch(TargetSettings settings);
 }
 
@@ -19,6 +22,8 @@ internal interface ITarget
 internal sealed class PythonTarget(string python, string repoRoot) : ITarget
 {
     public string Name => "Python";
+
+    public bool F9Cycles => false;
 
     public Process Launch(TargetSettings s)
     {
@@ -54,6 +59,8 @@ internal sealed class CSharpTarget(string exe) : ITarget
     public static string SettingsFile => Path.Combine(SettingsDir, "settings.json");
 
     public string Name => "C#";
+
+    public bool F9Cycles => true;
 
     public Process Launch(TargetSettings s)
     {

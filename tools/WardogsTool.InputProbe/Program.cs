@@ -90,6 +90,8 @@ internal static class Program
                 using var backup = new SettingsBackup();
                 try
                 {
+                    if (only == "f9")
+                        results.Add(F9Scenarios.Cycle(probe, exe));
                     if (only == "minimized")
                     {
                         results.Add(Scenarios.HammerMinimized(probe, new PythonTarget(python, repoRoot), 310));
@@ -105,6 +107,7 @@ internal static class Program
                         results.AddRange(Scenarios.RunInputSuite(probe, new CSharpTarget(exe)));
                         results.AddRange(UiScenarios.Run(probe, exe));
                         results.Add(MagnifierScenarios.EscGlobalStop(probe, exe));
+                        results.Add(F9Scenarios.Cycle(probe, exe));
                     }
                     if (only is "all" or "csharp" or "magnifier")
                         results.Add(MagnifierScenarios.Magnifier(probe, exe, centre, ShowStripes, ClicksAtWindow));

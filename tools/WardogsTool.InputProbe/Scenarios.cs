@@ -183,13 +183,41 @@ internal static class Scenarios
         r.Metric($"{label} event shapes", string.Join("; ", shapes));
     }
 
-    /// <summary>Hammer at the launched hold; Esc lands 150 ms into a hold.</summary>
-    public static ScenarioResult HammerStopDuringHold(Probe p, string target, int holdMs, int seconds = 3)
+    /// <summary>
+    /// F9 presses needed to reach <paramref name="holdMs"/> from OFF. Python: one press starts the
+    /// selected (launched) preset. C#: F9 cycles OFF → 510 → 310 → OFF.
+    /// </summary>
+    public static int F9PressesFor(ITarget target, int holdMs) => target.F9Cycles && holdMs == 310 ? 2 : 1;
+
+    /// <summary>Hammer at the given hold; Esc lands 150 ms into a hold.</summary>
+    public static ScenarioResult HammerStopDuringHold(Probe p, ITarget target, int holdMs, int seconds = 3)
     {
-        var r = new ScenarioResult(target, seconds == 3 ? $"Hammer {holdMs} ms, stop during hold" : $"Hammer {holdMs} ms, tool window minimized");
+        var r = new ScenarioResult(target.Name, seconds == 3 ? $"Hammer {holdMs} ms, stop during hold" : $"Hammer {holdMs} ms, tool window minimized");
         p.Activate();
+        var presses = F9PressesFor(target, holdMs);
         var t0 = p.KeyTap(Probe.VkF9);
-        p.Sleep(seconds * 1000 - 400);
+        for (var i = 1; i < presses; i++)
+        {
+            p.Sleep(150); // mid-hold of the 510 ms cycle
+            t0 = p.KeyTap(Probe.VkF9);
+        }
+        var tLastF9 = t0;
+        if (presses > 1)
+        {
+            // The switch must release the held button before the new cycle presses it again.
+            p.Sleep(300);
+            var afterSwitch = p.AppMouse(t0);
+            r.Metric("switch 510 → 310: first events after F9", string.Join(", ", afterSwitch.Take(2).Select(e => e.IsLeftUp ? "up" : "down")));
+            r.Expect(afterSwitch.Count >= 2 && afterSwitch[0].IsLeftUp && afterSwitch[1].IsLeftDown,
+                "switching presets did not release the button before the new cycle");
+            r.Metric("switch: release after F9 ms", afterSwitch.Count > 0 ? F(afterSwitch[0].Ms - Recorder.ToMs(t0)) : "?");
+            t0 = afterSwitch.Count > 0 ? afterSwitch[0].Ticks + 1 : t0; // measure the new cycle from here
+            p.Sleep(seconds * 1000 - 700);
+        }
+        else
+        {
+            p.Sleep(seconds * 1000 - 400);
+        }
         var d = p.WaitFor(e => e.FromApp && e.IsLeftDown, Recorder.Now, 2000);
         r.Expect(d is not null, "no mouse-down after F9");
         if (d is null) return r;
@@ -211,7 +239,7 @@ internal static class Scenarios
         r.Expect(evs[^1].IsLeftUp, "last event is not a mouse-up");
         r.Expect(lastUp.Ticks > tEsc && Recorder.ToMs(lastUp.Ticks - tEsc) < 60, "the stop did not release the button promptly");
         r.Expect(!Probe.LeftButtonDown(), "left button still reported down after stop");
-        r.Expect(p.KeyReachedWindow(Probe.VkF9, t0) && p.KeyReachedWindow(Probe.VkEsc, tEsc), "F9/Esc did not reach the focused window (swallowed?)");
+        r.Expect(p.KeyReachedWindow(Probe.VkF9, tLastF9) && p.KeyReachedWindow(Probe.VkEsc, tEsc), "F9/Esc did not reach the focused window (swallowed?)");
         return r;
     }
 
@@ -384,7 +412,7 @@ internal static class Scenarios
             Native.ShowWindow(proc.MainWindowHandle, 6 /* SW_MINIMIZE */);
             p.Sleep(1500);
             var minimized = Native.IsIconic(proc.MainWindowHandle);
-            var r = HammerStopDuringHold(p, target.Name, holdMs, seconds: 6);
+            var r = HammerStopDuringHold(p, target, holdMs, seconds: 6);
             r.Metric("tool window minimized", minimized);
             r.Expect(minimized, "could not minimize the tool window");
             return r;
@@ -406,7 +434,7 @@ internal static class Scenarios
         {
             if (!Probe.WaitForWindow(proc, 15000)) throw new AbortException($"{target.Name} window did not appear");
             p.Sleep(1200);
-            results.Add(HammerStopDuringHold(p, target.Name, 310));
+            results.Add(HammerStopDuringHold(p, target, 310));
             results.Add(HammerStopDuringGap(p, target.Name));
             results.Add(AntiAfk(p, target.Name));
             results.Add(Simultaneous(p, target.Name));
@@ -423,7 +451,7 @@ internal static class Scenarios
         {
             if (!Probe.WaitForWindow(proc, 15000)) throw new AbortException($"{target.Name} window did not appear");
             p.Sleep(1200);
-            results.Add(HammerStopDuringHold(p, target.Name, 510));
+            results.Add(HammerStopDuringHold(p, target, 510));
             results.Add(QuitDuringHold(p, target.Name, proc, viaF12: false));
         }
         finally

@@ -37,11 +37,13 @@ Enter the same values in `python wardogs_tool.py` and `WardogsTool.exe`:
 
 | Mortar | Target | Expected (both tools) |
 |---|---|---|
+| `x100.32, y59.45` | `x104.39, y63.59` (map format; WardogsTool only — the Python tool does not read labels) | `DIRECTION: 045°` · `RANGE:     581 m` |
 | `100.32 59.45` | `104.39 63.59` | `DIRECTION: 045°` · `RANGE:     581 m` · `Bearing exact: 44.51°   Range exact: 580.56 m` |
 | `78.49 71.84` | `81.44, 70.78` | `DIRECTION: 110°` · `RANGE:     313 m` |
 | `78.49 71.84` | `83.60 72.96` | `DIRECTION: 078°` · `RANGE:     523 m` |
 | `78.49 71.84` | `abc 1` | red `目标坐标: could not convert string to float: 'abc'`; previous result stays |
 
+- [ ] **(in game)** Copy a coordinate straight from the WARDOGS map (`x…, y…`) into the mortar and target boxes: the result is right; `y…, x…` gives the same result.
 - [ ] A few real in-game readings of your own give identical results in both tools.
 - [ ] **(in game)** Firing with the shown direction/range hits as before.
 

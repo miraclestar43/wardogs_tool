@@ -64,8 +64,8 @@ F8 and F9 start independently and can run together. Every Stop button and **Esc*
 用战狗地图上的坐标算出迫击炮要打的**方向（方位角）**和**距离**，不用手算。
 Turns WARDOGS map coordinates into the mortar's firing **direction (bearing)** and **range** — no mental maths.
 
-在「迫击炮」页：先输入一次炮位（如 `100.32 59.45`，回车），再逐个输入目标（`104.39 63.59` 或 `104.39, 63.59`，回车）：
-On the **Mortar** tab: type the mortar position once, then each target:
+在「迫击炮」页直接照抄地图上显示的坐标：先输入一次炮位（如 `x100.32, y59.45`，回车），再逐个输入目标（如 `x104.39, y63.59`，回车）：
+On the **Mortar** tab, type coordinates exactly as the WARDOGS map shows them: the mortar position once (e.g. `x100.32, y59.45`), then each target (e.g. `x104.39, y63.59`):
 <img width="604" height="899" alt="image" src="https://github.com/user-attachments/assets/31e607e1-3583-4f3f-a2fe-c7aae2715437" />
 
 ```
@@ -76,6 +76,18 @@ Bearing exact: 44.51°   Range exact: 580.56 m
 
 算完后目标框自动全选，直接输入下一个目标；炮位保持不变；输入有误时上一次结果保留，错误用红字显示；保留最近 20 条结果。
 After each result the target box is selected for the next one; the mortar position is kept; errors show in red and keep the last result; the last 20 results are listed.
+
+支持的坐标写法 Accepted formats（大小写都行，空格随意 · case-insensitive, spaces optional）：
+
+| 写法 Format | 说明 Notes |
+|---|---|
+| `x134.98, y65.56` | **地图上的原样格式（推荐）** · as shown on the WARDOGS map (recommended) |
+| `x134.98 y65.56` · `X134.98, Y65.56` · `x=134.98, y=65.56` · `X = 134.98 Y = 65.56` | 同上的变体 · variants |
+| `y65.56, x134.98` | 有 x / y 标记时按标记读，顺序不限 · with labels, order does not matter |
+| `134.98 65.56` · `134.98, 65.56` | 不带标记：先 X 后 Y · without labels: X first, then Y |
+
+只写了一个、写了两个 x、数字和下一个标记连在一起（如 `x1y2`）、或者带标记和不带标记混用时，会提示格式不对，不会猜。
+Input with a missing or repeated label, a number glued to the next label (`x1y2`), or a mix of labeled and unlabeled numbers is rejected rather than guessed.
 
 坐标约定 Convention：X 向东 east、Y 向北 north，1.00 = 100 m；方向 bearing 北 0°、东 90°、南 180°、西 270°；方向取整到度（359.5° → 000°），距离取整到米。
 

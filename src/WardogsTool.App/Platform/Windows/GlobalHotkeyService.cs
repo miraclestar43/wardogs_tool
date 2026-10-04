@@ -22,14 +22,14 @@ namespace WardogsTool.App.Platform.Windows;
 /// turns that into one event per fresh press. Injected input (hDevice = 0) is reported too, which
 /// lets the integration probe drive the hotkeys.
 /// </remarks>
-internal sealed class RawInputHotkeys : IDisposable
+internal sealed class GlobalHotkeyService : IDisposable
 {
     private readonly HashSet<int> _watched;
     private readonly HotkeyEdgeDetector _edges = new();
     private readonly Stopwatch _clock = Stopwatch.StartNew();
     private HwndSource? _source;
 
-    public RawInputHotkeys(IEnumerable<int> virtualKeys)
+    public GlobalHotkeyService(IEnumerable<int> virtualKeys)
     {
         _watched = [.. virtualKeys];
     }

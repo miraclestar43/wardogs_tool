@@ -10,7 +10,7 @@ namespace WardogsTool.App.Views;
 public partial class MainWindow : Window
 {
     private readonly MainViewModel _vm;
-    private readonly RawInputHotkeys _hotkeys = new(MainViewModel.Hotkeys);
+    private readonly GlobalHotkeyService _hotkeys = new(MainViewModel.Hotkeys);
     private readonly DispatcherTimer _refresh;
 
     /// <param name="hotkeysEnabled">false only for the --test self-test path.</param>

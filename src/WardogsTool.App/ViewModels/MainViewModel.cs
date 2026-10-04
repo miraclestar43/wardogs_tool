@@ -1,8 +1,10 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using WardogsTool.App.Services;
 using WardogsTool.Core.AntiAfk;
 using WardogsTool.Core.Hammer;
 using WardogsTool.Core.Input;
+using WardogsTool.Core.Magnifier;
 using WardogsTool.Core.Mortar;
 using WardogsTool.Core.Parsing;
 using WardogsTool.Core.Settings;
@@ -19,8 +21,12 @@ public sealed class MainViewModel : ObservableObject
     public const int VkF8 = 0x77;
     public const int VkF9 = 0x78;
     public const int VkEscape = 0x1B;
+    public const int VkF10 = 0x79;
     public const int VkF12 = 0x7B;
-    public static readonly int[] Hotkeys = [VkF8, VkF9, VkEscape, VkF12];
+    public static readonly int[] Hotkeys = [VkF8, VkF9, VkF10, VkEscape, VkF12];
+
+    /// <summary>Tabs: 0 Hammer, 1 Anti-AFK, 2 Mortar, 3 Magnifier, 4 Settings.</summary>
+    public const int TabCount = 5;
 
     /// <summary>IDLE_TEXT in wardogs_tool.py.</summary>
     public const string IdleText = "已停止   F8 防挂机 | F9 敲锤 | Esc 停止 | F12 退出";
@@ -33,17 +39,21 @@ public sealed class MainViewModel : ObservableObject
     private readonly IKeyboardInput _keyboard;
     private readonly ITimeSource _time;
     private readonly AppSettings _settings;
+    private readonly IMagnifierOverlay _magnifier;
     private readonly Action<string, string> _showError;
 
     public MainViewModel(HammerEngine hammer, AntiAfkEngine afk, IKeyboardInput keyboard, ITimeSource time,
-        AppSettings settings, Action<string, string> showError)
+        IMagnifierOverlay magnifier, AppSettings settings, string settingsPath, Action<string, string> showError)
     {
         _hammer = hammer;
         _afk = afk;
         _keyboard = keyboard;
         _time = time;
+        _magnifier = magnifier;
         _settings = settings;
         _showError = showError;
+        SettingsPath = settingsPath;
+        _zoom = MagnifierGeometry.NormalizeZoom(settings.Magnifier.Zoom);
 
         _holdMs = settings.Hammer.HoldMs;
         _afkKey = settings.AntiAfk.Key;
@@ -52,17 +62,26 @@ public sealed class MainViewModel : ObservableObject
         _afkPeriod = settings.AntiAfk.PeriodSeconds;
         _mortarPosition = settings.Mortar.Position;
         _alwaysOnTop = settings.Window.AlwaysOnTop;
-        _selectedTab = Math.Clamp(settings.Window.SelectedTab, 0, 2);
+        _selectedTab = Math.Clamp(settings.Window.SelectedTab, 0, TabCount - 1);
 
         StartHammerCommand = new RelayCommand(StartHammer);
+        StopHammerCommand = new RelayCommand(StopHammer);
         StartAfkCommand = new RelayCommand(StartAfk);
+        StopAfkCommand = new RelayCommand(StopAfk);
         StopAllCommand = new RelayCommand(StopAll);
+        ToggleMagnifierCommand = new RelayCommand(ToggleMagnifier);
         Refresh();
+        RefreshMagnifier();
     }
 
     public ICommand StartHammerCommand { get; }
+    public ICommand StopHammerCommand { get; }
     public ICommand StartAfkCommand { get; }
+    public ICommand StopAfkCommand { get; }
     public ICommand StopAllCommand { get; }
+    public ICommand ToggleMagnifierCommand { get; }
+
+    public string SettingsPath { get; }
 
     /// <summary>F12 (Python: quit()). The window closes itself, which runs <see cref="Shutdown"/>.</summary>
     public event EventHandler? QuitRequested;
@@ -88,6 +107,7 @@ public sealed class MainViewModel : ObservableObject
         {
             case VkF8: StartAfk(); break;
             case VkF9: StartHammer(); break;
+            case VkF10: ToggleMagnifier(); break;
             case VkEscape: StopAll(); break;
             case VkF12: QuitRequested?.Invoke(this, EventArgs.Empty); break;
         }
@@ -106,10 +126,26 @@ public sealed class MainViewModel : ObservableObject
         Refresh();
     }
 
-    /// <summary>Stops everything and writes the settings. Called when the window closes.</summary>
+    /// <summary>The hammer's own stop button: stops hammering only, anti-AFK keeps running.</summary>
+    public void StopHammer()
+    {
+        _hammer.Stop();
+        Refresh();
+    }
+
+    /// <summary>The anti-AFK tab's own stop button: hammering keeps running.</summary>
+    public void StopAfk()
+    {
+        _afk.Stop();
+        Refresh();
+    }
+
+    /// <summary>Stops everything, removes the lens and writes the settings. Called when the window closes.</summary>
     public AppSettings Shutdown()
     {
         StopAll();
+        _magnifier.Hide();
+        _settings.Magnifier.Zoom = Zoom;
         _settings.Hammer.HoldMs = HoldMs;
         _settings.AntiAfk.Key = AfkKey;
         _settings.AntiAfk.Count = AfkCount;
@@ -249,6 +285,61 @@ public sealed class MainViewModel : ObservableObject
         }
         _afk.Start(plan!);
         Refresh();
+    }
+
+    // ---------- F10 magnifier ----------
+
+    public IReadOnlyList<double> ZoomChoices => MagnifierGeometry.ZoomChoices;
+
+    private double _zoom;
+    public double Zoom
+    {
+        get => _zoom;
+        set
+        {
+            if (Set(ref _zoom, MagnifierGeometry.NormalizeZoom(value)))
+            {
+                RunMagnifierAction(() => _magnifier.SetZoom(_zoom));
+                RefreshMagnifier();
+            }
+        }
+    }
+
+    private bool _isMagnifierOn;
+    public bool IsMagnifierOn { get => _isMagnifierOn; private set => Set(ref _isMagnifierOn, value); }
+
+    private string _magnifierStatus = "";
+    public string MagnifierStatus { get => _magnifierStatus; private set => Set(ref _magnifierStatus, value); }
+
+    /// <summary>F10: lens on/off. Not affected by Esc (Esc stops automation only).</summary>
+    public void ToggleMagnifier()
+    {
+        RunMagnifierAction(() =>
+        {
+            if (_magnifier.IsShown) _magnifier.Hide();
+            else _magnifier.Show(Zoom);
+        });
+        RefreshMagnifier();
+    }
+
+    private void RunMagnifierAction(Action action)
+    {
+        try
+        {
+            action();
+        }
+        catch (Exception ex)
+        {
+            try { _magnifier.Hide(); } catch { /* already failing */ }
+            _showError("放大镜出错", ex.Message);
+        }
+    }
+
+    private void RefreshMagnifier()
+    {
+        IsMagnifierOn = _magnifier.IsShown;
+        var display = _magnifier.IsShown && _magnifier.Display.Length > 0 ? $"   ·   {_magnifier.Display}" : "";
+        MagnifierStatus = $"Magnifier: {(IsMagnifierOn ? "ON" : "OFF")}   ·   Zoom: {Zoom:0.0}x{display}";
     }
 
     // ---------- mortar ----------

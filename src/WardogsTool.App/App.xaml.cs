@@ -17,6 +17,7 @@ public partial class App : Application
     private HammerEngine? _hammer;
     private AntiAfkEngine? _afk;
     private MainViewModel? _vm;
+    private MagnifierOverlay? _magnifier;
     private SettingsStore? _store;
     private MainWindow? _window;
 
@@ -52,7 +53,8 @@ public partial class App : Application
         _store = new SettingsStore(SettingsStore.DefaultDirectory);
         var (settings, warning) = _store.Load();
 
-        _vm = new MainViewModel(_hammer, _afk, keyboard, time, settings,
+        _magnifier = new MagnifierOverlay(Dispatcher);
+        _vm = new MainViewModel(_hammer, _afk, keyboard, time, _magnifier, settings, _store.FilePath,
             (title, message) => MessageBox.Show(_window!, message, title, MessageBoxButton.OK, MessageBoxImage.Error));
         _window = new MainWindow(_vm, settings.Window);
         _window.Closing += (_, _) => SaveAndStop();
@@ -89,6 +91,7 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         EmergencyRelease();
+        try { _magnifier?.Dispose(); } catch { /* exiting anyway; the window dies with the process */ }
         _timerResolution?.Dispose();
         base.OnExit(e);
     }

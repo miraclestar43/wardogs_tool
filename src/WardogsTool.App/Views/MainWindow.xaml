@@ -76,6 +76,16 @@
             </Setter>
         </Style>
 
+        <Style x:Key="TabHeader" TargetType="StackPanel">
+            <Setter Property="MinWidth" Value="58" />
+            <Setter Property="Margin" Value="0,1" />
+            <Style.Resources>
+                <Style TargetType="TextBlock">
+                    <Setter Property="HorizontalAlignment" Value="Center" />
+                </Style>
+            </Style.Resources>
+        </Style>
+
         <!-- RUNNING / STOPPED badge; Tag carries the running flag. -->
         <Style x:Key="Badge" TargetType="Border">
             <Setter Property="CornerRadius" Value="5" />
@@ -99,14 +109,16 @@
 
         <!-- Footer: same status line as the Python tool, on every tab -->
         <StackPanel DockPanel.Dock="Bottom" Margin="2,10,0,0">
-            <CheckBox Content="窗口置顶  Always on top" IsChecked="{Binding AlwaysOnTop}" />
-            <TextBlock Text="{Binding StatusText}" Margin="0,6,0,0" Foreground="{StaticResource Ink}" TextWrapping="Wrap" />
+            <TextBlock Text="{Binding StatusText}" Foreground="{StaticResource Ink}" TextWrapping="Wrap" />
         </StackPanel>
 
         <TabControl SelectedIndex="{Binding SelectedTab}" Padding="10">
 
             <!-- 1. Fast hammer: the primary feature and landing tab -->
-            <TabItem Header="敲锤  Hammer">
+            <TabItem AutomationProperties.Name="敲锤 Hammer">
+                <TabItem.Header>
+                    <StackPanel Style="{StaticResource TabHeader}"><TextBlock Text="敲锤" /><TextBlock Text="Hammer" FontSize="10" Foreground="{StaticResource Muted}" /></StackPanel>
+                </TabItem.Header>
                 <StackPanel>
                     <Border Style="{StaticResource Card}">
                         <StackPanel>
@@ -154,17 +166,20 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <Button Style="{StaticResource PrimaryButton}" Command="{Binding StartHammerCommand}" Content="开始敲锤  START  (F9)" />
-                                <Button Grid.Column="2" Command="{Binding StopAllCommand}" Content="停止  STOP  (Esc)" />
+                                <Button Grid.Column="2" Command="{Binding StopHammerCommand}" Content="停止敲锤  STOP" />
                             </Grid>
                         </StackPanel>
                     </Border>
                     <TextBlock Margin="2,10,0,0" Style="{StaticResource Hint}"
-                               Text="F9 开始敲锤 · Esc 停止全部 · F12 退出。快捷键全局有效，不会拦截游戏按键。" />
+                               Text="F9 开始敲锤 · Esc 停止全部（敲锤 + 防挂机）· F12 退出。快捷键全局有效，不会拦截游戏按键。" />
                 </StackPanel>
             </TabItem>
 
             <!-- 2. Anti-AFK -->
-            <TabItem Header="防挂机  Anti-AFK">
+            <TabItem AutomationProperties.Name="防挂机 Anti-AFK">
+                <TabItem.Header>
+                    <StackPanel Style="{StaticResource TabHeader}"><TextBlock Text="防挂机" /><TextBlock Text="Anti-AFK" FontSize="10" Foreground="{StaticResource Muted}" /></StackPanel>
+                </TabItem.Header>
                 <Border Style="{StaticResource Card}">
                     <StackPanel>
                         <TextBlock Text="ANTI-AFK · 防挂机（定时按键）" Style="{StaticResource SectionTitle}" />
@@ -218,16 +233,19 @@
 
                         <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                             <Button Command="{Binding StartAfkCommand}" Content="开始  START  (F8)" Margin="0,0,8,0" />
-                            <Button Command="{Binding StopAllCommand}" Content="停止  STOP  (Esc)" />
+                            <Button Command="{Binding StopAfkCommand}" Content="停止防挂机  STOP" />
                         </StackPanel>
                         <TextBlock Margin="0,10,0,0" Style="{StaticResource Hint}"
-                                   Text="按 F8 后，第一次按键在一个周期之后；每次按键按住 50 ms。运行时设置不能改，先按 Esc 停止。" />
+                                   Text="按 F8 后，第一次按键在一个周期之后；每次按键按住 50 ms。运行时设置不能改，先停止。Esc 停止全部。" />
                     </StackPanel>
                 </Border>
             </TabItem>
 
             <!-- 3. Mortar calculator (secondary utility) -->
-            <TabItem Header="迫击炮  Mortar">
+            <TabItem AutomationProperties.Name="迫击炮 Mortar">
+                <TabItem.Header>
+                    <StackPanel Style="{StaticResource TabHeader}"><TextBlock Text="迫击炮" /><TextBlock Text="Mortar" FontSize="10" Foreground="{StaticResource Muted}" /></StackPanel>
+                </TabItem.Header>
                 <Border Style="{StaticResource Card}">
                     <StackPanel>
                         <TextBlock Text="MORTAR · 迫击炮计算" Style="{StaticResource SectionTitle}" />
@@ -268,6 +286,71 @@
                         <ListBox ItemsSource="{Binding History}" Height="118" FontFamily="Consolas" FontSize="12" Margin="0,2,0,0" />
                         <TextBlock Margin="0,8,0,0" Style="{StaticResource Hint}"
                                    Text="X 向东、Y 向北，1.00 = 100 m；方向：北 0°、东 90°、南 180°、西 270°。" />
+                    </StackPanel>
+                </Border>
+            </TabItem>
+
+            <!-- 4. Centre-screen magnifier -->
+            <TabItem AutomationProperties.Name="放大镜 Magnifier">
+                <TabItem.Header>
+                    <StackPanel Style="{StaticResource TabHeader}"><TextBlock Text="放大镜" /><TextBlock Text="Magnifier" FontSize="10" Foreground="{StaticResource Muted}" /></StackPanel>
+                </TabItem.Header>
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="MAGNIFIER · 屏幕中心放大镜" Style="{StaticResource SectionTitle}" />
+                        <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,10"
+                                   Text="给没有倍镜的武器用：把屏幕中心区域放大显示。只放大屏幕上已经显示的画面，不读取游戏数据、不识别目标、不瞄准。" />
+
+                        <Border Style="{StaticResource Badge}" Tag="{Binding IsMagnifierOn}" Padding="12,6">
+                            <TextBlock Foreground="White" FontWeight="Bold" HorizontalAlignment="Center">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="OFF · 已关闭" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsMagnifierOn}" Value="True">
+                                                <Setter Property="Text" Value="ON · 已开启" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Border>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                            <TextBlock Text="倍率  Zoom" VerticalAlignment="Center" Margin="0,0,12,0" />
+                            <ComboBox x:Name="ZoomBox" Width="90" ItemsSource="{Binding ZoomChoices}" SelectedItem="{Binding Zoom}" ItemStringFormat="{}{0:0.0}x" />
+                        </StackPanel>
+
+                        <Button Command="{Binding ToggleMagnifierCommand}" Content="开 / 关  TOGGLE  (F10)" HorizontalAlignment="Left" Margin="0,12,0,0" />
+                        <TextBlock Text="{Binding MagnifierStatus}" Margin="0,10,0,0" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" />
+                        <TextBlock Margin="0,10,0,0" Style="{StaticResource Hint}"
+                                   Text="F10 开/关（不拦截按键）。镜头 600×400 显示在游戏所在显示器的中心，鼠标可以穿透，不抢焦点。游戏请用无边框窗口模式。" />
+                    </StackPanel>
+                </Border>
+            </TabItem>
+
+            <!-- 5. Settings -->
+            <TabItem AutomationProperties.Name="设置 Settings">
+                <TabItem.Header>
+                    <StackPanel Style="{StaticResource TabHeader}"><TextBlock Text="设置" /><TextBlock Text="Settings" FontSize="10" Foreground="{StaticResource Muted}" /></StackPanel>
+                </TabItem.Header>
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="SETTINGS · 设置" Style="{StaticResource SectionTitle}" />
+                        <CheckBox Content="窗口置顶  Always on top" IsChecked="{Binding AlwaysOnTop}" />
+
+                        <TextBlock Text="快捷键  Hotkeys" FontWeight="Bold" Margin="0,14,0,4" />
+                        <TextBlock Style="{StaticResource Hint}" FontSize="13" xml:space="preserve">F9    快速敲锤  Fast hammer
+F8    防挂机  Anti-AFK
+F10   放大镜  Magnifier on/off
+Esc   停止敲锤和防挂机  Stop hammer + anti-AFK
+F12   停止并退出  Stop and quit</TextBlock>
+
+                        <TextBlock Text="设置文件  Settings file" FontWeight="Bold" Margin="0,14,0,4" />
+                        <TextBox Text="{Binding SettingsPath, Mode=OneWay}" IsReadOnly="True" BorderThickness="0" Background="Transparent" TextWrapping="Wrap" FontSize="12" />
+
+                        <TextBlock Margin="0,14,0,0" Style="{StaticResource Hint}"
+                                   Text="非官方工具，与 WARDOGS 开发商无关。只发送普通的 Windows 键鼠输入，不读写游戏内存、不注入、不修改游戏文件。使用是否符合游戏规则由用户自行判断。" />
                     </StackPanel>
                 </Border>
             </TabItem>
